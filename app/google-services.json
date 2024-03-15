@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "279779461984",
+    "project_id": "cs5520-lab6",
+    "storage_bucket": "cs5520-lab6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279779461984:android:1a12828b4b6e5527016c05",
+        "android_client_info": {
+          "package_name": "edu.northeastern.cs5520_lab6"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa1PkuIJFRcAgSHg0opg5u3CoG8X3-knY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
