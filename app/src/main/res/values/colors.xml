@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="colorPrimary">#075E54</color> <!-- WhatsApp dark green -->
+    <color name="colorPrimaryDark">#064743</color> <!-- Darker shade for the status bar -->
+    <color name="colorAccent">#25D366</color> <!-- WhatsApp light green -->
+    <color name="colorToolbar">#128C7E</color> <!-- Toolbar background color -->
+    <color name="colorTabLayout">#075E54</color> <!-- Tab layout background color -->
+    <color name="colorText">#FFFFFF</color> <!-- White text color -->
+    <!-- Add other colors as needed -->
+
 </resources>

@@ -4,13 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+
+import edu.northeastern.cs5520_lab6.main.MainActivity;
 
 public class LogInActivity extends AppCompatActivity {
 
