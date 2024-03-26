@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">CS5520-Lab6</string>
+    <string name="chat_avatar">user\'s avatar</string>
 </resources>
