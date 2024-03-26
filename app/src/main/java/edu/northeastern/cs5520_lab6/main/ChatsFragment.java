@@ -55,6 +55,8 @@ public class ChatsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
+        // Placeholder for chat data loading logic
+        chatList = new ArrayList<>();
 
         initializeRecyclerView(view);
         loadChatData();
@@ -79,8 +81,7 @@ public class ChatsFragment extends Fragment {
      * to fetch real chat data from a database or other data source.
      */
     private void loadChatData() {
-        // Placeholder for chat data loading logic
-        chatList = new ArrayList<>();
+
         // Example: chatList.add(new Chat("User Name", "Last Message", "Timestamp", "AvatarUrl"));
         adapter.notifyDataSetChanged();
     }
