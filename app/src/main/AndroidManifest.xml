@@ -28,6 +28,20 @@
             android:name=".main.MainActivity"
             android:exported="false">
         </activity>
+        <activity android:name=".contacts.ContactsActivity">
+            <!-- Include a parent activity for proper navigation -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.MainActivity" />
+        </activity>
+        <activity
+            android:name=".contacts.NewContactActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".contacts.NewGroupActivity"
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>
