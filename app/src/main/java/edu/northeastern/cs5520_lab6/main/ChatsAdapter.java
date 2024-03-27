@@ -12,6 +12,7 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.messages.Chat;
+import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
  * Adapter for managing a list of chat messages in a RecyclerView. This adapter binds Chat data

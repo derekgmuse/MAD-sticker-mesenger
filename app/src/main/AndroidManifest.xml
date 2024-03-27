@@ -42,6 +42,11 @@
             android:name=".contacts.NewGroupActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".messages.MessageActivity"
+            android:windowSoftInputMode="adjustResize"> <!-- This makes the input field rise -->
+        </activity>
+
     </application>
 
 </manifest>
