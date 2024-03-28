@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">CS5520-Lab6</string>
     <string name="chat_avatar">user\'s avatar</string>
+    <string name="contact_image">Contact Name</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="username">Username</string>
+    <string name="email">e-mail</string>
+    <string name="save">Save</string>
 </resources>

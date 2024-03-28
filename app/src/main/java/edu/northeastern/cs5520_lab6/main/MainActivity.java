@@ -1,5 +1,6 @@
 package edu.northeastern.cs5520_lab6.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,6 +10,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.contacts.ContactsActivity;
 
 /**
  * Main activity of the application, hosting the primary user interface components. This activity
@@ -55,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
         fab.setOnClickListener(view -> {
             // Open contact selection activity
+            Intent intent = new Intent(MainActivity.this, ContactsActivity.class);
+            startActivity(intent);
         });
     }
 

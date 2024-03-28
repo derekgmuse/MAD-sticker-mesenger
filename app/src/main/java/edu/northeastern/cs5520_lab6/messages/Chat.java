@@ -13,6 +13,7 @@ package edu.northeastern.cs5520_lab6.messages;
  * @version 1.0
  */
 public class Chat {
+    private String senderId;
     private String name;
     private String lastMessage;
     private String timestamp;
@@ -21,13 +22,15 @@ public class Chat {
     /**
      * Constructs a Chat instance with specified details.
      *
+     * @param id The id of the sender
      * @param name The name of the other party in the chat conversation.
      * @param lastMessage The last message exchanged in this chat.
      * @param timestamp The timestamp of the last message, typically in a readable format.
      * @param avatarUrl The URL of the avatar image for the other party. This parameter is optional
      *                  and can be omitted if avatar images are not being used.
      */
-    public Chat(String name, String lastMessage, String timestamp, String avatarUrl) {
+    public Chat(String id, String name, String lastMessage, String timestamp, String avatarUrl) {
+        this.senderId=id;
         this.name = name;
         this.lastMessage = lastMessage;
         this.timestamp = timestamp;
@@ -35,6 +38,12 @@ public class Chat {
     }
 
     // Getters for the class properties
+
+    /**
+     * Returns the id of the other party in the chat conversation.
+     * @return The id as an int.
+     */
+    public String getSenderId() { return senderId; }
 
     /**
      * Returns the name of the other party in the chat conversation.
