@@ -23,7 +23,7 @@ import edu.northeastern.cs5520_lab6.R;
  * @author Tony Wilson
  * @version 1.0
  */
-public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ContactViewHolder> {
+public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.ContactViewHolder> {
     private List<Contact> contacts;
     private LayoutInflater inflater;
     private ContactClickListener contactClickListener;
@@ -35,7 +35,7 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
      * @param context  The current context, used to inflate layout files.
      * @param contacts The list of Contact objects to be displayed in the RecyclerView.
      */
-    public ContactsAdapter(Context context, List<Contact> contacts, ContactClickListener contactClickListener) {
+    public NewGroupAdapter(Context context, List<Contact> contacts, ContactClickListener contactClickListener) {
         this.inflater = LayoutInflater.from(context);
         this.contacts = contacts;
         this.contactClickListener = contactClickListener;
@@ -90,7 +90,7 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
                     if (contactClickListener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
-                            contactClickListener.onContactClick(contacts.get(position).getId());
+                            contactClickListener.onContactClick(position);
                         }
                     }
                 }
@@ -99,6 +99,6 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
     }
 
     public interface ContactClickListener {
-        void onContactClick(String contactId);
+        void onContactClick(int contactId);
     }
 }

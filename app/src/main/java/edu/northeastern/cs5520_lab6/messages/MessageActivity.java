@@ -48,7 +48,20 @@ public class MessageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String contactId = extras.getString("contactId", null);
+            String groupId = extras.getString("groupId", null);
+            // Load appropriate messages based on ID
+            if (contactId != null) {
+                // Load conversation with this contact
+            } else if (groupId != null) {
+                // Load group conversation
+            }
+        }
+
         initializeToolbar();
+        setupDummyMessages();
         setupMessageRecyclerView();
         setupMessageInput();
     }
@@ -63,6 +76,14 @@ public class MessageActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("Messages");
     }
 
+    private void setupDummyMessages() {
+        // Populate messages with dummy data for demonstration
+        String currentUserId = "currentUserId";
+        messages.add(new Message("Hello!", currentUserId, System.currentTimeMillis() - 5000));
+        messages.add(new Message("Hi there! How are you?", "user2", System.currentTimeMillis() - 3000));
+        messages.add(new Message("I'm doing great, thanks for asking!", currentUserId, System.currentTimeMillis() - 1000));
+    }
+
     /**
      * Sets up the RecyclerView for displaying messages, including initializing the adapter
      * with dummy messages.
@@ -73,9 +94,6 @@ public class MessageActivity extends AppCompatActivity {
 
         // Populate messages with dummy data for demonstration
         String currentUserId = "currentUserId";
-        messages.add(new Message("Hello!", currentUserId, System.currentTimeMillis() - 5000));
-        messages.add(new Message("Hi there! How are you?", "user2", System.currentTimeMillis() - 3000));
-        messages.add(new Message("I'm doing great, thanks for asking!", currentUserId, System.currentTimeMillis() - 1000));
 
         messageAdapter = new MessageAdapter(messages, currentUserId);
         messagesRecyclerView.setAdapter(messageAdapter);

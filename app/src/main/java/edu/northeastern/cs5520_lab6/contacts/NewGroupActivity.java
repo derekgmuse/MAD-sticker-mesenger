@@ -1,7 +1,9 @@
 package edu.northeastern.cs5520_lab6.contacts;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
  * An activity dedicated to creating a new group by selecting members from a list of contacts.
@@ -36,6 +39,8 @@ public class NewGroupActivity extends AppCompatActivity {
 
     private List<Contact> contacts = new ArrayList<>();
     private List<Contact> selectedContacts = new ArrayList<>();
+    private SelectedContactsAdapter selectedContactsAdapter;
+    private NewGroupAdapter newGroupAdapter;
 
     /**
      * Initializes the activity, sets up the user interface, and prepares data and view
@@ -87,15 +92,25 @@ public class NewGroupActivity extends AppCompatActivity {
         // Setup RecyclerView for selected contacts
         RecyclerView selectedContactsRecyclerView = findViewById(R.id.selectedContactsRecyclerView);
         selectedContactsRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        selectedContactsAdapter = new SelectedContactsAdapter(this, selectedContacts);
+
         // Assume SelectedContactsAdapter is your adapter for selected contacts
-        selectedContactsRecyclerView.setAdapter(new SelectedContactsAdapter(this, selectedContacts));
+        selectedContactsRecyclerView.setAdapter(selectedContactsAdapter);
 
         // Setup RecyclerView for all contacts
         RecyclerView contactsRecyclerView = findViewById(R.id.contactsRecyclerView);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Assume ContactsAdapter is your adapter for all contacts
-        contactsRecyclerView.setAdapter(new ContactsAdapter(this, contacts));
+        // Assume NewGroupAdapter is your adapter for all contacts
+        newGroupAdapter = new NewGroupAdapter(this, contacts, new NewGroupAdapter.ContactClickListener() {
+            @Override
+            public void onContactClick(int contactId) {
+                selectedContacts.add(contacts.get(contactId));
+                selectedContactsAdapter.notifyDataSetChanged();
+            }
+        });
+
+        contactsRecyclerView.setAdapter(newGroupAdapter);
     }
 
     /**
@@ -106,9 +121,27 @@ public class NewGroupActivity extends AppCompatActivity {
     private void configureConfirmationButton() {
         // FAB setup for confirming selections
         FloatingActionButton fab = findViewById(R.id.confirmSelectionFab);
-        fab.setOnClickListener(view -> {
-            // Handle FAB click for confirming selection
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Assuming you have logic here to create the group and get its ID
+                String groupId = createGroupAndGetId(selectedContacts);
+
+                Intent intent = new Intent(NewGroupActivity.this, MessageActivity.class);
+                intent.putExtra("groupId", groupId);
+                startActivity(intent);
+            }
         });
+    }
+
+    /**
+     * Returns the selectedContacts as a string.  May need to modify this to get the desired affect.
+     *
+     * @param selectedContacts
+     * @return
+     */
+    private String createGroupAndGetId(List<Contact> selectedContacts) {
+        return selectedContacts.toString();
     }
 
     /**

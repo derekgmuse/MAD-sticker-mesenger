@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
  * Displays a list of contacts and provides functionality to navigate to activities for creating a
@@ -71,7 +72,14 @@ public class ContactsActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.contactsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ContactsAdapter(this, contacts);
+        adapter = new ContactsAdapter(this, contacts, new ContactsAdapter.ContactClickListener() {
+            @Override
+            public void onContactClick(String contactId) {
+                Intent intent = new Intent(ContactsActivity.this, MessageActivity.class);
+                intent.putExtra("contactId", contactId);
+                startActivity(intent);
+            }
+        });
         recyclerView.setAdapter(adapter);
     }
 

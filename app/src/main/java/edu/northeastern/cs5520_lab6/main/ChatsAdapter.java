@@ -29,12 +29,18 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     private List<Chat> chatList;
 
     /**
+     * The listen for clicking on a chat.
+     */
+    private  ChatItemClickListener chatItemClickListener;
+
+    /**
      * Initializes the adapter with a list of chat messages.
      *
      * @param chatList A list of Chat objects to be displayed.
      */
-    public ChatsAdapter(List<Chat> chatList) {
+    public ChatsAdapter(List<Chat> chatList, ChatItemClickListener chatItemClickListener) {
         this.chatList = chatList;
+        this.chatItemClickListener = chatItemClickListener;
     }
 
     /**
@@ -87,7 +93,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
      * the last message, and the timestamp of the last message, as well as an image view for
      * the avatar.
      */
-    public static class ChatViewHolder extends RecyclerView.ViewHolder {
+    public class ChatViewHolder extends RecyclerView.ViewHolder {
         public TextView nameTextView;
         public TextView lastMessageTextView;
         public TextView timestampTextView;
@@ -99,12 +105,28 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
          *
          * @param itemView The root view of the chat item layout.
          */
-        public ChatViewHolder(View itemView) {
+        public ChatViewHolder(View itemView){ //, ChatItemClickListener listener) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.nameTextView);
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
             timestampTextView = itemView.findViewById(R.id.timestampTextView);
             avatarImageView = itemView.findViewById(R.id.avatarImageView);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (chatItemClickListener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            chatItemClickListener.onChatClick(chatList.get(position).getSenderId());
+                        }
+                    }
+                }
+            });
         }
+    }
+
+    public interface ChatItemClickListener {
+        void onChatClick(String contactId);
     }
 }
