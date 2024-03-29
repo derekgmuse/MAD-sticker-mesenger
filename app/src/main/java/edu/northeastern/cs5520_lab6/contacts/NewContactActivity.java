@@ -1,5 +1,6 @@
 package edu.northeastern.cs5520_lab6.contacts;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -7,13 +8,24 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
+import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
  * An activity that presents a form for creating a new contact. Users can input the first name,
  * last name, username, and email of the new contact. The activity includes a toolbar with
- * "New Contact" as its title and an option to return to the previous screen. Upon filling the
+ * "New User" as its title and an option to return to the previous screen. Upon filling the
  * form, users can save the new contact information by tapping the save button, which triggers
  * validation and persistence of the contact data.
  *
@@ -24,6 +36,10 @@ public class NewContactActivity extends AppCompatActivity {
 
     private EditText firstNameEditText, lastNameEditText, usernameEditText, emailEditText;
     private Button saveContactButton;
+    private RecyclerView searchResultsRecyclerView;
+    private NewContactAdapter newContactAdapter;
+    private List<User> searchResults = new ArrayList<>();
+    private String currentUserId;
 
     /**
      * Sets up the activity's user interface on creation. Initializes form input fields and
@@ -38,8 +54,22 @@ public class NewContactActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_contact);
 
+        // Initialize FirebaseAuth instance
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+
+        // Check if the user is signed in
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            // Handle the case where the user is not signed in
+            Intent intent_login = new Intent(NewContactActivity.this, LogInActivity.class);
+            startActivity(intent_login);
+        }
+
         initializeToolbar();
         initializeFormFields();
+        setupRecyclerView();
         configureSaveButton();
     }
 
@@ -50,7 +80,7 @@ public class NewContactActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("New Contact");
+        getSupportActionBar().setTitle("New User");
         getSupportActionBar().setSubtitle("Add contact");
     }
 
@@ -62,6 +92,27 @@ public class NewContactActivity extends AppCompatActivity {
         lastNameEditText = findViewById(R.id.lastNameEditText);
         usernameEditText = findViewById(R.id.usernameEditText);
         emailEditText = findViewById(R.id.emailEditText);
+    }
+
+    /**
+     * Initializes the RecyclerView for displaying users.
+     */
+    private void setupRecyclerView() {
+        RecyclerView recyclerView = findViewById(R.id.searchResultsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        newContactAdapter = new NewContactAdapter(this, searchResults, new NewContactAdapter.ContactClickListener() {
+            @Override
+            public void onContactClick(String contactId) {
+                FirebaseApi.addContactToUser(NewContactActivity.this, currentUserId, contactId, new FirebaseApi.ContactAddedCallback() {
+                    @Override
+                    public void onContactAdded() {
+                        // Contact added successfully, navigate back to ContactsActivity
+                        finish();
+                    }
+                });
+            }
+        });
+        recyclerView.setAdapter(newContactAdapter);
     }
 
     /**
@@ -85,6 +136,21 @@ public class NewContactActivity extends AppCompatActivity {
         // Validate input...
         // Save the contact information to your database or server...
         // Intent to go back to the ContactsActivity or display success message
+        FirebaseApi.searchUsersByUsername(username, new UserSearchCallback() {
+            @Override
+            public void onSearchResults(List<User> users) {
+                searchResults.clear();
+                if(users != null) {
+                    searchResults.addAll(users);
+                    newContactAdapter.notifyDataSetChanged(); // Refresh search results in UI
+                }
+
+            }
+        });
+    }
+
+    public interface UserSearchCallback {
+        void onSearchResults(List<User> users);
     }
 
     /**

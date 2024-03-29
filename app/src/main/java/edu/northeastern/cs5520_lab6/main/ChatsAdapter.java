@@ -118,7 +118,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                     if (chatItemClickListener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
-                            chatItemClickListener.onChatClick(chatList.get(position).getSenderId());
+                            chatItemClickListener.onChatClick(chatList.get(position).getId());
                         }
                     }
                 }
@@ -127,6 +127,6 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     }
 
     public interface ChatItemClickListener {
-        void onChatClick(String contactId);
+        void onChatClick(String chatId);
     }
 }

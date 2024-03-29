@@ -10,9 +10,13 @@ package edu.northeastern.cs5520_lab6.messages;
  * @version 1.0
  */
 public class Message {
+    private String chatId;  // The unique identifier of the parent chat
+    private String id;  //  The id of the message within this chat
     private String text;  // The actual text content of the message
     private String senderId;  // The unique identifier of the message sender
     private long timestamp;  // The time at which the message was sent, represented as a long value
+
+    public Message() { }
 
     /**
      * Constructs a new Message instance with specified text content, sender identifier, and timestamp.
@@ -21,13 +25,27 @@ public class Message {
      * @param senderId The unique identifier of the user who sent the message.
      * @param timestamp The timestamp when the message was sent.
      */
-    public Message(String text, String senderId, long timestamp) {
+    public Message(String chatId, String id, String text, String senderId, long timestamp) {
+        this.chatId = chatId;
+        this.id = id;
         this.text = text;
         this.senderId = senderId;
         this.timestamp = timestamp;
     }
 
     // Getters
+
+    /**
+     * Retrieves the chatId parent
+     * @return The id of the parent chat as a String.
+     */
+    public String getChatId() { return chatId; }
+
+    /**
+     * Retrieves the id of the message inside this chat.
+     * @return the id of the message unique to this chat as a String.
+     */
+    public String getId() { return id; }
 
     /**
      * Retrieves the text content of the message.

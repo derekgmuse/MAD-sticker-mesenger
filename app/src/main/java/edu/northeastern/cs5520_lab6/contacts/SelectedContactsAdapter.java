@@ -28,7 +28,7 @@ import edu.northeastern.cs5520_lab6.R;
  */
 public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContactsAdapter.ViewHolder> {
 
-    private List<Contact> selectedContacts;
+    private List<User> selectedUsers;
     private LayoutInflater inflater;
 
     /**
@@ -36,11 +36,11 @@ public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContac
      * contacts.
      *
      * @param context The current context, used for inflating layout files.
-     * @param selectedContacts A list of Contact objects representing the selected contacts.
+     * @param selectedUsers A list of User objects representing the selected contacts.
      */
-    public SelectedContactsAdapter(Context context, List<Contact> selectedContacts) {
+    public SelectedContactsAdapter(Context context, List<User> selectedUsers) {
         this.inflater = LayoutInflater.from(context);
-        this.selectedContacts = selectedContacts;
+        this.selectedUsers = selectedUsers;
     }
 
     @NonNull
@@ -52,14 +52,14 @@ public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContac
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Contact contact = selectedContacts.get(position);
-        holder.nameTextView.setText(contact.getName());
-        // Load the image into imageView. Example with Glide: Glide.with(holder.imageView.getContext()).load(contact.getImageUrl()).into(holder.imageView);
+        User user = selectedUsers.get(position);
+        holder.nameTextView.setText(user.getName());
+        // Load the image into imageView. Example with Glide: Glide.with(holder.imageView.getContext()).load(user.getImageUrl()).into(holder.imageView);
     }
 
     @Override
     public int getItemCount() {
-        return selectedContacts.size();
+        return selectedUsers.size();
     }
 
     /**

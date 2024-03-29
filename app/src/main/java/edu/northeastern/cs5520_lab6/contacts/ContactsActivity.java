@@ -13,25 +13,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
-import edu.northeastern.cs5520_lab6.messages.MessageActivity;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 
 /**
- * Displays a list of contacts and provides functionality to navigate to activities for creating a
- * new group or adding a new contact. The activity uses a {@link RecyclerView} to list contacts,
- * each represented by a {@link Contact} object. Options for "New Group" and "Add Contact" lead
+ * Displays a list of users and provides functionality to navigate to activities for creating a
+ * new group or adding a new contact. The activity uses a {@link RecyclerView} to list users,
+ * each represented by a {@link User} object. Options for "New Group" and "Add User" lead
  * to respective activities for those actions. This activity is an essential part of the app's
- * navigation and user interaction, allowing for the management and selection of contacts.
+ * navigation and user interaction, allowing for the management and selection of users.
  *
  * @author Tony Wilson
  * @version 1.0
  */
 public class ContactsActivity extends AppCompatActivity {
-    private List<Contact> contacts = new ArrayList<>();
+    private List<User> contacts = new ArrayList<>();
     private ContactsAdapter adapter;
 
     /**
-     * Initializes the activity, sets up the toolbar, populates the contacts list, and configures
-     * button listeners for creating new groups and adding new contacts.
+     * Initializes the activity, sets up the toolbar, populates the users list, and configures
+     * button listeners for creating new groups and adding new users.
      *
      * @param savedInstanceState Contains data supplied in onSaveInstanceState(Bundle) if the activity
      *                           is being re-initialized after previously being shut down.
@@ -42,10 +42,36 @@ public class ContactsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_contacts);
 
         setupToolbar();
-        populateContactsList();
         setupRecyclerView();
+        //FirebaseApi.loadContactData(contacts, adapter);
+        loadContactData();
         setupInteractionButtons();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Load the contacts from the database and update the adapter
+        loadContactData();
+    }
+
+    private void loadContactData() {
+        // Clear the existing contacts list
+        contacts.clear();
+
+        // Fetch the updated contacts list from Firebase
+        FirebaseApi.loadContactData(contacts, new GenericAdapterNotifier() {
+            @Override
+            public void notifyAdapterDataSetChanged() {
+                // This callback should be triggered once the contacts list is updated
+                // Now, notify the adapter to refresh the UI
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
+    }
+
 
     /**
      * Sets up the toolbar with a back button and a title.
@@ -54,20 +80,11 @@ public class ContactsActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Select Contact");
+        getSupportActionBar().setTitle("Select User");
     }
 
     /**
-     * Populates the contacts list with dummy data. This method should be replaced with actual
-     * data retrieval from a database or a network request.
-     */
-    private void populateContactsList() {
-        contacts.add(new Contact("1", "John Doe", "Hello there!", "image_url"));
-        contacts.add(new Contact("2", "Jane Smith", "Welcome!", "image_url"));
-    }
-
-    /**
-     * Initializes the RecyclerView for displaying contacts.
+     * Initializes the RecyclerView for displaying users.
      */
     private void setupRecyclerView() {
         RecyclerView recyclerView = findViewById(R.id.contactsRecyclerView);
@@ -75,16 +92,20 @@ public class ContactsActivity extends AppCompatActivity {
         adapter = new ContactsAdapter(this, contacts, new ContactsAdapter.ContactClickListener() {
             @Override
             public void onContactClick(String contactId) {
+                FirebaseApi.navigateToMessageActivityWithChatId(ContactsActivity.this, contactId);
+                /*
                 Intent intent = new Intent(ContactsActivity.this, MessageActivity.class);
                 intent.putExtra("contactId", contactId);
                 startActivity(intent);
+
+                 */
             }
         });
         recyclerView.setAdapter(adapter);
     }
 
     /**
-     * Configures listeners for the "New Group" and "Add Contact" buttons to navigate to the
+     * Configures listeners for the "New Group" and "Add User" buttons to navigate to the
      * corresponding activities.
      */
     private void setupInteractionButtons() {

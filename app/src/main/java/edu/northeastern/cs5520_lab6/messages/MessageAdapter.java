@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 
 /**
  * An adapter for the RecyclerView in MessageActivity, responsible for binding message data
@@ -24,7 +25,7 @@ import edu.northeastern.cs5520_lab6.R;
  * @author Tony Wilson
  * @version 1.0
  */
-public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements GenericAdapterNotifier {
     private List<Message> messages;
     private String currentUserId;
 
@@ -38,9 +39,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         // Determine the view type based on the sender
         Message message = messages.get(position);
         if (message.getSenderId().equals(currentUserId)) {
-            return R.layout.item_message_user; // Assuming this layout is for the user's messages
+            return R.layout.item_message_user; // This layout is for the user's messages
         } else {
-            return R.layout.item_message_contact; // Assuming this layout is for the contact's messages
+            return R.layout.item_message_contact; // This layout is for the contact's messages
         }
     }
 
@@ -87,5 +88,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void bind(Message message) {
             messageTextView.setText(message.getText());
         }
+    }
+
+    @Override
+    public void notifyAdapterDataSetChanged() {
+        notifyDataSetChanged();
+        //scrollToPosition(messages.size() - 1); // Scroll to the last message
     }
 }

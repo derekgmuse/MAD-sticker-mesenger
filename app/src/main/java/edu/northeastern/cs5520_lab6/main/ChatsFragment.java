@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 import edu.northeastern.cs5520_lab6.messages.Chat;
 import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
@@ -57,22 +58,14 @@ public class ChatsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
+
         // Placeholder for chat data loading logic
         chatList = new ArrayList<>();
 
-        setupDummyChats();
         initializeRecyclerView(view);
-        loadChatData();
+        FirebaseApi.loadChatData(chatList, adapter);
 
         return view;
-    }
-
-    public void setupDummyChats() {
-        chatList.add(new Chat("1", "Alice", "Hey, how are you?", "10:45 AM", "image_url_1"));
-        chatList.add(new Chat("2", "Bob", "Let's meet tomorrow!", "Yesterday", "image_url_2"));
-        chatList.add(new Chat("3", "Charlie", "Did you complete the assignment?", "Sunday", "image_url_3"));
-        // Add more dummy chats as needed
-
     }
 
     /**
@@ -86,24 +79,12 @@ public class ChatsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new ChatsAdapter(chatList, new ChatsAdapter.ChatItemClickListener() {
             @Override
-            public void onChatClick(String contactId) {
+            public void onChatClick(String chatId) {
                 Intent intent = new Intent(getContext(), MessageActivity.class);
-                intent.putExtra("contactId", contactId);
+                intent.putExtra("chatId", chatId);
                 startActivity(intent);
             }
         });
         recyclerView.setAdapter(adapter);
     }
-
-    /**
-     * Loads chat data into the adapter. This method is a placeholder and should be implemented
-     * to fetch real chat data from a database or other data source.
-     */
-    private void loadChatData() {
-
-        // Example: chatList.add(new Chat("User Name", "Last Message", "Timestamp", "AvatarUrl"));
-        adapter.notifyDataSetChanged();
-    }
-
-    // TODO: Add methods to update chatList and refresh the adapter as needed
 }

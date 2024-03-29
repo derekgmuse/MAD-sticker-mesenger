@@ -38,11 +38,46 @@
         android:ems="10"
         android:inputType="textPassword"
         android:hint="Password"
-        app:layout_constraintBottom_toTopOf="@+id/button_signup"
+        app:layout_constraintBottom_toTopOf="@+id/editText_fullName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText_signup_email" />
+
+    <EditText
+        android:id="@+id/editText_fullName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Full Name"
+        app:layout_constraintTop_toBottomOf="@+id/editText_signup_password"
+        app:layout_constraintBottom_toTopOf="@+id/editText_username"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <EditText
+        android:id="@+id/editText_username"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Username"
+        app:layout_constraintTop_toBottomOf="@+id/editText_fullName"
+        app:layout_constraintBottom_toTopOf="@+id/editText_welcome_message"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <EditText
+        android:id="@+id/editText_welcome_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Welcome Message"
+        app:layout_constraintBottom_toTopOf="@+id/button_signup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editText_username" />
 
     <Button
         android:id="@+id/button_signup"
@@ -53,7 +88,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText_signup_password" />
+        app:layout_constraintTop_toBottomOf="@+id/editText_welcome_message" />
 
     <TextView
         android:id="@+id/onClick_login"
