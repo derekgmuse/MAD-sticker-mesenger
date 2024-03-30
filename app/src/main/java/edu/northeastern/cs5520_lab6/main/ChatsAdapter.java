@@ -12,15 +12,14 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.messages.Chat;
-import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
- * Adapter for managing a list of chat messages in a RecyclerView. This adapter binds Chat data
- * to views defined in a custom layout for each chat item. It is responsible for creating
- * ViewHolder instances and binding chat data to these holders as needed.
+ * Adapter class for a RecyclerView that displays a list of chat sessions. Each chat session is
+ * represented by a {@link Chat} object and displayed using a custom layout. This adapter is
+ * responsible for managing chat data and binding these data to the view holders.
  *
+ * @version 1.1
  * @author Tony Wilson
- * @version 1.0
  */
 public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHolder> {
     /**
@@ -34,9 +33,10 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     private  ChatItemClickListener chatItemClickListener;
 
     /**
-     * Initializes the adapter with a list of chat messages.
+     * Constructs a new ChatsAdapter instance.
      *
-     * @param chatList A list of Chat objects to be displayed.
+     * @param chatList A list of {@link Chat} objects to be displayed in the RecyclerView.
+     * @param chatItemClickListener Listener for handling clicks on chat items.
      */
     public ChatsAdapter(List<Chat> chatList, ChatItemClickListener chatItemClickListener) {
         this.chatList = chatList;
@@ -105,7 +105,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
          *
          * @param itemView The root view of the chat item layout.
          */
-        public ChatViewHolder(View itemView){ //, ChatItemClickListener listener) {
+        public ChatViewHolder(View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.nameTextView);
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
@@ -118,7 +118,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                     if (chatItemClickListener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
-                            chatItemClickListener.onChatClick(chatList.get(position).getSenderId());
+                            chatItemClickListener.onChatClick(chatList.get(position).getId());
                         }
                     }
                 }
@@ -126,7 +126,15 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
         }
     }
 
+    /**
+     * Interface for defining the click behavior on chat items.
+     */
     public interface ChatItemClickListener {
-        void onChatClick(String contactId);
+        /**
+         * Called when a chat item is clicked.
+         *
+         * @param chatId The ID of the clicked chat.
+         */
+        void onChatClick(String chatId);
     }
 }

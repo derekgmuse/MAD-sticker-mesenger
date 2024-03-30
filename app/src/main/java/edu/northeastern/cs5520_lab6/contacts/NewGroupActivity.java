@@ -16,29 +16,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
-import edu.northeastern.cs5520_lab6.messages.MessageActivity;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 
 /**
- * An activity dedicated to creating a new group by selecting members from a list of contacts.
- * It features two sections: one for displaying selected contacts and another for selecting
- * from all available contacts. A floating action button confirms the selection, finalizing
- * the group creation process.
+ * An activity for creating new group chats by selecting users from a list. It showcases
+ * selected users in a horizontal RecyclerView and allows for selection from a list of all
+ * users in a vertical RecyclerView. A floating action button confirms the selection and
+ * facilitates the creation of the group chat. This activity employs a Toolbar for navigation,
+ * with support for returning to the previous screen.
  *
- * The activity utilizes a {@link Toolbar} for navigation and contextual information,
- * including the ability to return to the previous screen. The RecyclerView for selected
- * contacts displays them horizontally, emphasizing the distinction between selections and
- * potential choices.
- *
- * Initial contact data is provided as dummy data for demonstration and should be replaced
- * with dynamic data retrieval from a persistent storage or remote database solution.
+ * This implementation assumes the presence of `SelectedContactsAdapter` for displaying selected
+ * users and `NewGroupAdapter` for listing all available users. It's recommended to replace dummy
+ * data with actual data retrieval from a database or remote server for production use.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 2.0
  */
 public class NewGroupActivity extends AppCompatActivity {
 
-    private List<Contact> contacts = new ArrayList<>();
-    private List<Contact> selectedContacts = new ArrayList<>();
+    private List<User> contacts = new ArrayList<>();
+    private List<User> selectedUsers = new ArrayList<>();
     private SelectedContactsAdapter selectedContactsAdapter;
     private NewGroupAdapter newGroupAdapter;
 
@@ -57,8 +54,8 @@ public class NewGroupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_group);
 
         initializeToolbar();
-        populateContactLists();
         setupRecyclerViews();
+        FirebaseApi.loadContactData(contacts, newGroupAdapter);
         configureConfirmationButton();
     }
 
@@ -74,38 +71,28 @@ public class NewGroupActivity extends AppCompatActivity {
     }
 
     /**
-     * Populates the contact lists with dummy data. This method is a placeholder and should
-     * be replaced with actual data retrieval from a database or a network source.
-     */
-    private void populateContactLists() {
-        // Dummy data - replace with database or Firebase call
-        contacts.add(new Contact("1", "John Doe", "Hello there!", "image_url"));
-        contacts.add(new Contact("2", "Jane Smith", "Welcome!", "image_url"));
-    }
-
-    /**
-     * Configures RecyclerViews for displaying selected contacts and all contacts, allowing
+     * Configures RecyclerViews for displaying selected users and all users, allowing
      * users to manage group membership before finalizing.
      */
     private void setupRecyclerViews() {
-        // RecyclerView setup for selected and all contacts
-        // Setup RecyclerView for selected contacts
+        // RecyclerView setup for selected and all users
+        // Setup RecyclerView for selected users
         RecyclerView selectedContactsRecyclerView = findViewById(R.id.selectedContactsRecyclerView);
         selectedContactsRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        selectedContactsAdapter = new SelectedContactsAdapter(this, selectedContacts);
+        selectedContactsAdapter = new SelectedContactsAdapter(this, selectedUsers);
 
-        // Assume SelectedContactsAdapter is your adapter for selected contacts
+        // Assume SelectedContactsAdapter is our adapter for selected users
         selectedContactsRecyclerView.setAdapter(selectedContactsAdapter);
 
-        // Setup RecyclerView for all contacts
+        // Setup RecyclerView for all users
         RecyclerView contactsRecyclerView = findViewById(R.id.contactsRecyclerView);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Assume NewGroupAdapter is your adapter for all contacts
+        // Assume NewGroupAdapter is our adapter for all users
         newGroupAdapter = new NewGroupAdapter(this, contacts, new NewGroupAdapter.ContactClickListener() {
             @Override
             public void onContactClick(int contactId) {
-                selectedContacts.add(contacts.get(contactId));
+                selectedUsers.add(contacts.get(contactId));
                 selectedContactsAdapter.notifyDataSetChanged();
             }
         });
@@ -114,7 +101,7 @@ public class NewGroupActivity extends AppCompatActivity {
     }
 
     /**
-     * Configures the FloatingActionButton to finalize the selection of contacts for the
+     * Configures the FloatingActionButton to finalize the selection of users for the
      * new group, typically involving saving the group to a database and navigating to the
      * group chat view.
      */
@@ -124,24 +111,23 @@ public class NewGroupActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Assuming you have logic here to create the group and get its ID
-                String groupId = createGroupAndGetId(selectedContacts);
-
-                Intent intent = new Intent(NewGroupActivity.this, MessageActivity.class);
-                intent.putExtra("groupId", groupId);
-                startActivity(intent);
+                FirebaseApi.findOrCreateChatWithUsers(NewGroupActivity.this, createGroupAndGetId(selectedUsers), "");
             }
         });
     }
 
     /**
-     * Returns the selectedContacts as a string.  May need to modify this to get the desired affect.
+     * Returns the selectedUsers as a string.  May need to modify this to get the desired affect.
      *
-     * @param selectedContacts
+     * @param selectedUsers
      * @return
      */
-    private String createGroupAndGetId(List<Contact> selectedContacts) {
-        return selectedContacts.toString();
+    private List<String> createGroupAndGetId(List<User> selectedUsers) {
+        List<String> selectedUserIds = new ArrayList<String>();
+        for (User user : selectedUsers) {
+            selectedUserIds.add(user.getUserId());
+        }
+        return selectedUserIds;
     }
 
     /**

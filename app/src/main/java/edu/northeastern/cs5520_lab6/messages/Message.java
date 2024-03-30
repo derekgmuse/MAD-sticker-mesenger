@@ -1,33 +1,58 @@
 package edu.northeastern.cs5520_lab6.messages;
 
 /**
- * Represents a single message in a conversation, encapsulating the message text, the sender's
- * identifier, and a timestamp indicating when the message was sent. This class forms the core
- * data structure for messaging functionality within the app, allowing for the representation
- * and management of messages exchanged between users.
+ * Encapsulates the details of a message exchanged in a chat conversation. This class includes
+ * information about the message's content, the sender's identifier, the chat it belongs to, and
+ * the time at which it was sent. It serves as a fundamental component in the messaging feature,
+ * facilitating the display, storage, and retrieval of messages within the app.
  *
+ * @version 1.1
  * @author Tony Wilson
- * @version 1.0
  */
 public class Message {
-    private String text;  // The actual text content of the message
-    private String senderId;  // The unique identifier of the message sender
-    private long timestamp;  // The time at which the message was sent, represented as a long value
+    private String chatId;  // Identifier of the chat to which the message belongs
+    private String id;      // Unique identifier of the message within its chat
+    private String text;    // Text content of the message
+    private String senderId; // Identifier of the user who sent the message
+    private String timestamp;  // Epoch timestamp indicating when the message was sent
 
     /**
-     * Constructs a new Message instance with specified text content, sender identifier, and timestamp.
-     *
-     * @param text The text content of the message.
-     * @param senderId The unique identifier of the user who sent the message.
-     * @param timestamp The timestamp when the message was sent.
+     * Default constructor for creating an instance of Message. This is particularly used
+     * for data retrieval operations where an empty object is populated from database records.
      */
-    public Message(String text, String senderId, long timestamp) {
+    public Message() { }
+
+    /**
+     * Constructs a Message instance with all necessary details provided. This constructor
+     * initializes a message ready for sending, displaying, or storing.
+     *
+     * @param chatId    The identifier of the chat to which the message belongs.
+     * @param id        Unique identifier for the message within its chat.
+     * @param text      The text content of the message.
+     * @param senderId  The identifier of the user who sent the message.
+     * @param timestamp Epoch timestamp representing when the message was sent.
+     */
+    public Message(String chatId, String id, String text, String senderId, String timestamp) {
+        this.chatId = chatId;
+        this.id = id;
         this.text = text;
         this.senderId = senderId;
         this.timestamp = timestamp;
     }
 
     // Getters
+
+    /**
+     * Retrieves the chatId parent
+     * @return The id of the parent chat as a String.
+     */
+    public String getChatId() { return chatId; }
+
+    /**
+     * Retrieves the id of the message inside this chat.
+     * @return the id of the message unique to this chat as a String.
+     */
+    public String getId() { return id; }
 
     /**
      * Retrieves the text content of the message.
@@ -48,7 +73,7 @@ public class Message {
      *
      * @return The timestamp when the message was sent.
      */
-    public long getTimestamp() { return timestamp; }
+    public String getTimestamp() { return timestamp; }
 
     // Setters, if you need to modify the messages after creation
 
@@ -74,5 +99,5 @@ public class Message {
      *
      * @param timestamp The new timestamp for the message.
      */
-    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 }

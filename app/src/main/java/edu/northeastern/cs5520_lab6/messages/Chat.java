@@ -1,49 +1,68 @@
 package edu.northeastern.cs5520_lab6.messages;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Represents a single chat conversation, including information about the other party's name,
- * the last message exchanged, the timestamp of the last message, and optionally, an avatar URL.
- * This class is used to encapsulate the data for a chat in a structured way, making it easier
- * to manage and display chat information within the application.
+ * Models the concept of a chat conversation within the application, encapsulating information
+ * such as the participants' identifiers, the conversation's display name (often derived from
+ * the participants' names), the last message exchanged within the chat, the timestamp for the
+ * last message, and optionally, a URL to an avatar image representing the chat or the other party.
  *
- * The Chat class provides getters (and potentially setters) for accessing chat details. It's
- * intended for use in list structures where multiple chat conversations are managed and displayed.
+ * This class is designed to facilitate easy management and display of chat conversations, allowing
+ * for a structured approach to storing chat metadata.
  *
+ * @version 1.1
  * @author Tony Wilson
- * @version 1.0
  */
 public class Chat {
-    private String senderId;
-    private String name;
-    private String lastMessage;
-    private String timestamp;
-    private String avatarUrl; // Optional URL for the avatar image
+    private String chatId; // Unique identifier for the chat
+    private List<String> userIds; // Identifiers for all users participating in the chat
+    private String name; // Display name for the chat, often based on participants' names
+    private String lastMessage; // Content of the last message sent within the chat
+    private String timestamp; // Timestamp for when the last message was sent
+    private String avatarUrl; // URL to an avatar image associated with the chat
 
     /**
-     * Constructs a Chat instance with specified details.
-     *
-     * @param id The id of the sender
-     * @param name The name of the other party in the chat conversation.
-     * @param lastMessage The last message exchanged in this chat.
-     * @param timestamp The timestamp of the last message, typically in a readable format.
-     * @param avatarUrl The URL of the avatar image for the other party. This parameter is optional
-     *                  and can be omitted if avatar images are not being used.
+     * Default constructor for creating an empty Chat instance. This is used primarily
+     * for data retrieval from databases that require a no-argument constructor.
      */
-    public Chat(String id, String name, String lastMessage, String timestamp, String avatarUrl) {
-        this.senderId=id;
+    public Chat() { }
+
+    /**
+     * Constructs a new Chat instance with specified details. This constructor initializes
+     * the chat with all necessary information, making the object ready for use in displaying
+     * chat data or storing it in a database.
+     *
+     * @param chatId Unique identifier for the chat.
+     * @param userIds List of user identifiers who are participants of the chat.
+     * @param name Display name for the chat.
+     * @param lastMessage Content of the last message exchanged.
+     * @param timestamp Timestamp for the last message exchange.
+     * @param avatarUrl URL to an optional avatar image for the chat.
+     */
+    public Chat(String id, List<String> userIds, String name, String lastMessage, String timestamp, String avatarUrl) {
+        this.chatId = id;
+        this.userIds = new ArrayList<>(userIds);
         this.name = name;
         this.lastMessage = lastMessage;
         this.timestamp = timestamp;
         this.avatarUrl = avatarUrl;
     }
 
-    // Getters for the class properties
+    // Accessor methods for class properties
 
     /**
-     * Returns the id of the other party in the chat conversation.
-     * @return The id as an int.
+     * Returns the id of the chat conversation.
+     * @return The id as an String.
      */
-    public String getSenderId() { return senderId; }
+    public String getId() { return chatId; }
+
+    /**
+     * Returns the userIds of all users in the conversation.
+     * @return The List of userids in the conversation as a List<String>
+     */
+    public List<String> getUserIds() { return userIds; }
 
     /**
      * Returns the name of the other party in the chat conversation.
@@ -76,6 +95,16 @@ public class Chat {
     public String getAvatarUrl() {
         return avatarUrl;
     }
+
+
+
+    // Mutator methods if modification of chat details is required after initial construction
+
+    /**
+     * Sets the id for the chat
+     * @param key String id from the database
+     */
+    public void setId(String key) { this.chatId=key; }
 
     // Setters if needed
     // ...

@@ -1,69 +1,92 @@
 package edu.northeastern.cs5520_lab6.messages;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
+import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 
 /**
- * Manages the user interface for displaying and sending messages in a chat conversation. This activity
- * includes a {@link RecyclerView} for displaying messages, a {@link EditText} for composing new messages,
- * and a {@link Button} for sending them. Messages sent by the current user and their contact are
- * distinguished visually and arranged chronologically.
+ * Provides an interactive interface for users to view and send messages within a specific chat.
+ * It dynamically displays a conversation's messages and allows users to input and send new messages.
+ * The activity handles message display through a RecyclerView and manages sending messages via
+ * FirebaseApi, offering a seamless chat experience.
  *
- * The activity simulates message sending and displays dummy messages upon creation for demonstration
- * purposes. In a real-world scenario, messages would be retrieved from and sent to a backend server or
- * database.
- *
+ * @version 1.1
  * @author Tony Wilson
- * @version 1.0
  */
 public class MessageActivity extends AppCompatActivity {
-    private EditText messageEditText; // Input field for composing messages
-    private Button sendMessageButton; // Button for sending messages
-    private RecyclerView messagesRecyclerView; // Displays the message history
-    private MessageAdapter messageAdapter; // Adapter for the RecyclerView
-    private List<Message> messages = new ArrayList<>(); // Stores the current session's messages
+    private EditText messageEditText; // Input field for new messages
+    private Button sendMessageButton; // Button to initiate message sending
+    private RecyclerView messagesRecyclerView; // Displays the history of messages
+    private MessageAdapter messageAdapter; // Adapter for rendering messages in RecyclerView
+    private List<Message> messages = new ArrayList<>(); // Message history for the current session
+    private String chatId; // Identifier for the current chat
+    private String currentUserId; // User ID of the message sender
 
     /**
-     * Sets up the activity's layout, initializes UI components, and populates the message history
-     * with dummy data on creation.
+     * Initializes the activity, setting up UI components and loading existing messages for the
+     * selected chat.
      *
-     * @param savedInstanceState If the activity is being re-initialized after previously being
-     *                           shut down, this Bundle contains the data it most recently supplied
-     *                           in onSaveInstanceState(Bundle). Otherwise, it is null.
+     * @param savedInstanceState Bundle containing the activity's previously saved state, if any.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            String contactId = extras.getString("contactId", null);
-            String groupId = extras.getString("groupId", null);
-            // Load appropriate messages based on ID
-            if (contactId != null) {
-                // Load conversation with this contact
-            } else if (groupId != null) {
-                // Load group conversation
-            }
+        // Initialize FirebaseAuth instance
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+
+        // Check if the user is signed in
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            // Handle the case where the user is not signed in
+            Intent intent_login = new Intent(MessageActivity.this, LogInActivity.class);
+            startActivity(intent_login);
         }
 
         initializeToolbar();
-        setupDummyMessages();
         setupMessageRecyclerView();
         setupMessageInput();
+
+        // Load the data after the recyclerview and adapter is initialized
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            this.chatId = extras.getString("chatId", null);
+
+            // Load appropriate messages based on chatId
+            if (chatId != null) {
+                FirebaseApi.loadMessagesForChat(chatId, messages, new GenericAdapterNotifier() {
+                    @Override
+                    public void notifyAdapterDataSetChanged() {
+                        messageAdapter.notifyDataSetChanged();
+                        if (!messages.isEmpty()) {
+                            messagesRecyclerView.smoothScrollToPosition(messages.size() - 1); // Scroll to the last message
+                        }
+                    }
+                });
+            }
+        }
     }
 
     /**
@@ -76,25 +99,16 @@ public class MessageActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("Messages");
     }
 
-    private void setupDummyMessages() {
-        // Populate messages with dummy data for demonstration
-        String currentUserId = "currentUserId";
-        messages.add(new Message("Hello!", currentUserId, System.currentTimeMillis() - 5000));
-        messages.add(new Message("Hi there! How are you?", "user2", System.currentTimeMillis() - 3000));
-        messages.add(new Message("I'm doing great, thanks for asking!", currentUserId, System.currentTimeMillis() - 1000));
-    }
-
     /**
      * Sets up the RecyclerView for displaying messages, including initializing the adapter
      * with dummy messages.
      */
     private void setupMessageRecyclerView() {
         messagesRecyclerView = findViewById(R.id.messagesRecyclerView);
-        messagesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        // Populate messages with dummy data for demonstration
-        String currentUserId = "currentUserId";
-
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true); // This will make the list start at the bottom
+        layoutManager.setReverseLayout(false); // This keeps the order of items from top to bottom
+        messagesRecyclerView.setLayoutManager(layoutManager);
         messageAdapter = new MessageAdapter(messages, currentUserId);
         messagesRecyclerView.setAdapter(messageAdapter);
     }
@@ -114,14 +128,25 @@ public class MessageActivity extends AppCompatActivity {
      */
     private void sendMessage() {
         String messageText = messageEditText.getText().toString().trim();
+        long timestamp = System.currentTimeMillis();
         if (!messageText.isEmpty()) {
-            Message newMessage = new Message(messageText, "user1", System.currentTimeMillis());
-            messages.add(newMessage);
+            FirebaseApi.sendMessage(chatId, messageText, timestamp, new FirebaseApi.MessageSendCallback() {
+                @Override
+                public void onSuccess(Message message) {
+                    // Update UI and clear input field...
+                    runOnUiThread(() -> {
+                        messageEditText.setText("");
+                    });
+                }
 
-            // Update UI and clear input field...
-            messageAdapter.notifyItemInserted(messages.size() - 1);
-            messagesRecyclerView.scrollToPosition(messages.size() - 1);
-            messageEditText.setText("");
+                @Override
+                public void onFailure() {
+                    // Handle sending failure, e.g., show a toast message
+                    runOnUiThread(() -> {
+                        Toast.makeText(MessageActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
         }
     }
 

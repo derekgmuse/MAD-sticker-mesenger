@@ -15,32 +15,45 @@ import java.util.List;
 import edu.northeastern.cs5520_lab6.R;
 
 /**
- * Adapter for displaying a list of contacts within a RecyclerView. Each contact is presented
- * with their name, a welcome message, and an image, which are populated from the provided
- * list of {@link Contact} objects. This adapter is responsible for creating and binding
- * view holders for each contact, enabling dynamic content display within a RecyclerView layout.
+ * Adapter for the RecyclerView in the NewGroupActivity, displaying a list of all users from which
+ * a new group chat can be created. It provides functionality to select users for inclusion in the
+ * group chat. Each user item displays the user's name and a welcome message, optionally supplemented
+ * by an image if provided.
+ *
+ * This adapter supports interaction through clicks, invoking a callback interface upon selection
+ * of a user, enabling the caller to manage user selections for the group chat.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 2.0
  */
-public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.ContactViewHolder> {
-    private List<Contact> contacts;
+public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.ContactViewHolder> implements GenericAdapterNotifier{
+    private List<User> users;
     private LayoutInflater inflater;
     private ContactClickListener contactClickListener;
 
     /**
-     * Constructs a ContactsAdapter with the specified context and a list of contacts.
-     * The context is used to inflate views from XML layout files.
+     * Constructs a NewGroupAdapter with the provided context, user list, and a callback listener
+     * for handling user selection.
      *
-     * @param context  The current context, used to inflate layout files.
-     * @param contacts The list of Contact objects to be displayed in the RecyclerView.
+     * @param context The current context, used for layout inflation.
+     * @param users A list of User objects to be displayed.
+     * @param contactClickListener A callback interface for handling clicks on user items.
      */
-    public NewGroupAdapter(Context context, List<Contact> contacts, ContactClickListener contactClickListener) {
+    public NewGroupAdapter(Context context, List<User> users, ContactClickListener contactClickListener) {
         this.inflater = LayoutInflater.from(context);
-        this.contacts = contacts;
+        this.users = users;
         this.contactClickListener = contactClickListener;
     }
 
+    /**
+     * Creates a new ViewHolder for user items when required. This method is invoked by the
+     * RecyclerView when it needs a new ViewHolder to display an item.
+     *
+     * @param parent The ViewGroup into which the new View will be added.
+     * @param viewType The view type of the new View. This adapter does not differentiate view types,
+     *                 so this parameter is not used.
+     * @return A new instance of ContactViewHolder that holds the View for the user item.
+     */
     @NonNull
     @Override
     public ContactViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -48,18 +61,33 @@ public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.Contac
         return new ContactViewHolder(itemView);
     }
 
+    /**
+     * Binds data from the user object at a specified position in the list to a ViewHolder.
+     * This method populates the views in the ViewHolder with the user's name and welcome message.
+     * Optionally, it could also handle loading the user's image using an image loading library.
+     *
+     * @param holder The ViewHolder which should be updated to represent the contents of the item
+     *               at the given position in the data set.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull ContactViewHolder holder, int position) {
-        Contact contact = contacts.get(position);
-        holder.nameTextView.setText(contact.getName());
-        holder.messageTextView.setText(contact.getWelcomeMessage());
-        // Use Glide or Picasso to load the image
-        // Glide.with(holder.itemView.getContext()).load(contact.getImageUrl()).into(holder.imageView);
+        User user = users.get(position);
+        holder.nameTextView.setText(user.getName());
+        holder.messageTextView.setText(user.getWelcomeMessage());
+        // Placeholder for image loading, assuming usage of a library like Glide or Picasso
+        // Glide.with(holder.itemView.getContext()).load(user.getImageUrl()).into(holder.imageView);
     }
 
+    /**
+     * Returns the total number of items in the list held by the adapter. This method is called by the
+     * RecyclerView to determine how many items are in the list.
+     *
+     * @return The total number of users in the list.
+     */
     @Override
     public int getItemCount() {
-        return contacts.size();
+        return users.size();
     }
 
     /**
@@ -98,7 +126,23 @@ public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.Contac
         }
     }
 
+    /**
+     * Interface definition for a callback to be invoked when a user is selected for group chat
+     * inclusion. The method passes position of the selected user as a parameter.
+     */
     public interface ContactClickListener {
         void onContactClick(int contactId);
+    }
+
+    /**
+     * Notifies any registered observers that the data set has changed. This method should be called
+     * by the RecyclerView to reflect any changes in the list of users being displayed.
+     *
+     * This implementation calls notifyDataSetChanged(), notifying observers that the entire data set
+     * has changed. Use more specific notification methods to minimize unnecessary work by the RecyclerView.
+     */
+    @Override
+    public void notifyAdapterDataSetChanged() {
+        notifyDataSetChanged();
     }
 }

@@ -28,7 +28,7 @@ import edu.northeastern.cs5520_lab6.R;
  */
 public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContactsAdapter.ViewHolder> {
 
-    private List<Contact> selectedContacts;
+    private List<User> selectedUsers;
     private LayoutInflater inflater;
 
     /**
@@ -36,13 +36,20 @@ public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContac
      * contacts.
      *
      * @param context The current context, used for inflating layout files.
-     * @param selectedContacts A list of Contact objects representing the selected contacts.
+     * @param selectedUsers A list of User objects representing the selected contacts.
      */
-    public SelectedContactsAdapter(Context context, List<Contact> selectedContacts) {
+    public SelectedContactsAdapter(Context context, List<User> selectedUsers) {
         this.inflater = LayoutInflater.from(context);
-        this.selectedContacts = selectedContacts;
+        this.selectedUsers = selectedUsers;
     }
 
+    /**
+     * Called when RecyclerView needs a new ViewHolder of the given type to represent an item.
+     *
+     * @param parent The ViewGroup into which the new View will be added after it is bound to an adapter position.
+     * @param viewType The view type of the new View.
+     * @return A new ViewHolder that holds a View of the given view type.
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -50,16 +57,28 @@ public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContac
         return new ViewHolder(itemView);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position. This method updates the contents
+     * of the ViewHolder to reflect the item at the given position.
+     *
+     * @param holder The ViewHolder which should be updated to represent the contents of the item at the given position.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Contact contact = selectedContacts.get(position);
-        holder.nameTextView.setText(contact.getName());
-        // Load the image into imageView. Example with Glide: Glide.with(holder.imageView.getContext()).load(contact.getImageUrl()).into(holder.imageView);
+        User user = selectedUsers.get(position);
+        holder.nameTextView.setText(user.getName());
+        // Load the image into imageView. Example with Glide: Glide.with(holder.imageView.getContext()).load(user.getImageUrl()).into(holder.imageView);
     }
 
+    /**
+     * Returns the total number of items in the data set held by the adapter.
+     *
+     * @return The total number of selected contacts.
+     */
     @Override
     public int getItemCount() {
-        return selectedContacts.size();
+        return selectedUsers.size();
     }
 
     /**
@@ -72,9 +91,10 @@ public class SelectedContactsAdapter extends RecyclerView.Adapter<SelectedContac
         TextView nameTextView;
 
         /**
-         * Constructs a ViewHolder, binding the ImageView and TextView from the inflated layout.
+         * Constructs a new ViewHolder instance, binding the ImageView and TextView from the
+         * inflated layout to display the contact's information.
          *
-         * @param itemView The root view of the inflated layout, containing the needed views.
+         * @param itemView The root view of the item layout which contains the ImageView and TextView.
          */
         ViewHolder(View itemView) {
             super(itemView);
