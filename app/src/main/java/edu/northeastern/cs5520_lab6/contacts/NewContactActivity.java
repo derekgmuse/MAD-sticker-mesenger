@@ -20,17 +20,25 @@ import java.util.List;
 import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
-import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
- * An activity that presents a form for creating a new contact. Users can input the first name,
- * last name, username, and email of the new contact. The activity includes a toolbar with
- * "New User" as its title and an option to return to the previous screen. Upon filling the
- * form, users can save the new contact information by tapping the save button, which triggers
- * validation and persistence of the contact data.
+ * Facilitates the creation of a new contact by providing a user interface for inputting contact
+ * details such as first name, last name, username, and email. The activity features a toolbar for
+ * navigation and a form for contact information entry. It also supports searching for users by
+ * username and displaying the results in a RecyclerView, allowing for easy addition of contacts.
+ *
+ * Upon entering search criteria and initiating a search, users are displayed in a list. Selecting
+ * a user from this list will add them to the current user's contacts. This functionality enhances
+ * user interaction by streamlining the process of finding and adding new contacts.
+ *
+ * Version updates include:
+ * - Implementation of user search functionality based on username.
+ * - Display of search results with an option to add users as contacts directly from the search
+ *   results.
+ * - Automated return to the ContactsActivity upon successful addition of a new contact.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 1.1
  */
 public class NewContactActivity extends AppCompatActivity {
 
@@ -85,7 +93,9 @@ public class NewContactActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes form fields for entering new contact information.
+     * Initializes form fields for entering new contact information and configures the search
+     * results RecyclerView. This method sets up the user interface components for data entry
+     * and displays search results, facilitating user interaction.
      */
     private void initializeFormFields() {
         firstNameEditText = findViewById(R.id.firstNameEditText);
@@ -124,8 +134,9 @@ public class NewContactActivity extends AppCompatActivity {
     }
 
     /**
-     * Collects input from the form fields, validates them, and persists the new contact information.
-     * After saving, it may navigate back to the ContactsActivity or display a success message.
+     * Searches for users by username and displays the results in a RecyclerView. Users can select
+     * a contact from the search results to add them directly as a new contact. This method enhances
+     * the user experience by providing an efficient way to find and add contacts.
      */
     private void saveContact() {
         String firstName = firstNameEditText.getText().toString();
@@ -149,6 +160,11 @@ public class NewContactActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Interface for receiving search results from user queries. This callback interface is utilized
+     * to update the user interface with search results, allowing the user to select from the
+     * displayed users and add them as contacts.
+     */
     public interface UserSearchCallback {
         void onSearchResults(List<User> users);
     }

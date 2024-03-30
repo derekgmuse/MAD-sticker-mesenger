@@ -3,6 +3,8 @@ package edu.northeastern.cs5520_lab6.main;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,9 +61,8 @@ public class ChatsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
 
-        // Placeholder for chat data loading logic
+        // Initialize components of activity
         chatList = new ArrayList<>();
-
         initializeRecyclerView(view);
         FirebaseApi.loadChatData(chatList, adapter);
 

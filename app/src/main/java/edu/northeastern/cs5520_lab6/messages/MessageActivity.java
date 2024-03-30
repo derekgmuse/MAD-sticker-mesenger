@@ -20,39 +20,32 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.R;
-import edu.northeastern.cs5520_lab6.SignUpActivity;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 
 /**
- * Manages the user interface for displaying and sending messages in a chat conversation. This activity
- * includes a {@link RecyclerView} for displaying messages, a {@link EditText} for composing new messages,
- * and a {@link Button} for sending them. Messages sent by the current user and their contact are
- * distinguished visually and arranged chronologically.
+ * Provides an interactive interface for users to view and send messages within a specific chat.
+ * It dynamically displays a conversation's messages and allows users to input and send new messages.
+ * The activity handles message display through a RecyclerView and manages sending messages via
+ * FirebaseApi, offering a seamless chat experience.
  *
- * The activity simulates message sending and displays dummy messages upon creation for demonstration
- * purposes. In a real-world scenario, messages would be retrieved from and sent to a backend server or
- * database.
- *
+ * @version 1.1
  * @author Tony Wilson
- * @version 1.0
  */
 public class MessageActivity extends AppCompatActivity {
-    private EditText messageEditText; // Input field for composing messages
-    private Button sendMessageButton; // Button for sending messages
-    private RecyclerView messagesRecyclerView; // Displays the message history
-    private MessageAdapter messageAdapter; // Adapter for the RecyclerView
-    private List<Message> messages = new ArrayList<>(); // Stores the current session's messages
-    private String chatId;
-    private String currentUserId;
+    private EditText messageEditText; // Input field for new messages
+    private Button sendMessageButton; // Button to initiate message sending
+    private RecyclerView messagesRecyclerView; // Displays the history of messages
+    private MessageAdapter messageAdapter; // Adapter for rendering messages in RecyclerView
+    private List<Message> messages = new ArrayList<>(); // Message history for the current session
+    private String chatId; // Identifier for the current chat
+    private String currentUserId; // User ID of the message sender
 
     /**
-     * Sets up the activity's layout, initializes UI components, and populates the message history
-     * with dummy data on creation.
+     * Initializes the activity, setting up UI components and loading existing messages for the
+     * selected chat.
      *
-     * @param savedInstanceState If the activity is being re-initialized after previously being
-     *                           shut down, this Bundle contains the data it most recently supplied
-     *                           in onSaveInstanceState(Bundle). Otherwise, it is null.
+     * @param savedInstanceState Bundle containing the activity's previously saved state, if any.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,9 +135,6 @@ public class MessageActivity extends AppCompatActivity {
                 public void onSuccess(Message message) {
                     // Update UI and clear input field...
                     runOnUiThread(() -> {
-                        messages.add(message);
-                        messageAdapter.notifyItemInserted(messages.size() - 1);
-                        messagesRecyclerView.smoothScrollToPosition(messages.size() - 1);
                         messageEditText.setText("");
                     });
                 }

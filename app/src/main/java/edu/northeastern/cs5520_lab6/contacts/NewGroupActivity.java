@@ -17,24 +17,20 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
-import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
 /**
- * An activity dedicated to creating a new group by selecting members from a list of users.
- * It features two sections: one for displaying selected users and another for selecting
- * from all available users. A floating action button confirms the selection, finalizing
- * the group creation process.
+ * An activity for creating new group chats by selecting users from a list. It showcases
+ * selected users in a horizontal RecyclerView and allows for selection from a list of all
+ * users in a vertical RecyclerView. A floating action button confirms the selection and
+ * facilitates the creation of the group chat. This activity employs a Toolbar for navigation,
+ * with support for returning to the previous screen.
  *
- * The activity utilizes a {@link Toolbar} for navigation and contextual information,
- * including the ability to return to the previous screen. The RecyclerView for selected
- * users displays them horizontally, emphasizing the distinction between selections and
- * potential choices.
- *
- * Initial contact data is provided as dummy data for demonstration and should be replaced
- * with dynamic data retrieval from a persistent storage or remote database solution.
+ * This implementation assumes the presence of `SelectedContactsAdapter` for displaying selected
+ * users and `NewGroupAdapter` for listing all available users. It's recommended to replace dummy
+ * data with actual data retrieval from a database or remote server for production use.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 2.0
  */
 public class NewGroupActivity extends AppCompatActivity {
 
@@ -115,16 +111,7 @@ public class NewGroupActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FirebaseApi.navigateToMessageActivityWithChatId(NewGroupActivity.this, createGroupAndGetId(selectedUsers));
-                /*
-                // Assuming you have logic here to create the group and get its ID
-                String groupId = createGroupAndGetId(selectedUsers);
-
-                Intent intent = new Intent(NewGroupActivity.this, MessageActivity.class);
-                intent.putExtra("groupId", groupId);
-                startActivity(intent);
-
-                 */
+                FirebaseApi.findOrCreateChatWithUsers(NewGroupActivity.this, createGroupAndGetId(selectedUsers), "");
             }
         });
     }

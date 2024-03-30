@@ -16,14 +16,16 @@ import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 
 /**
- * Displays a list of users and provides functionality to navigate to activities for creating a
- * new group or adding a new contact. The activity uses a {@link RecyclerView} to list users,
- * each represented by a {@link User} object. Options for "New Group" and "Add User" lead
- * to respective activities for those actions. This activity is an essential part of the app's
- * navigation and user interaction, allowing for the management and selection of users.
+ * Manages the display of contacts in the application, offering navigation to activities for creating
+ * new groups or adding new contacts. It utilizes a RecyclerView to list users, allowing for
+ * interaction with individual contact items. The activity also provides options for initiating
+ * group chats or adding a new contact, integrating closely with Firebase for data management.
+ *
+ * Version update: Enhanced data loading mechanisms and streamlined navigation for an improved
+ * user experience.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 1.1
  */
 public class ContactsActivity extends AppCompatActivity {
     private List<User> contacts = new ArrayList<>();
@@ -43,18 +45,32 @@ public class ContactsActivity extends AppCompatActivity {
 
         setupToolbar();
         setupRecyclerView();
-        //FirebaseApi.loadContactData(contacts, adapter);
-        loadContactData();
         setupInteractionButtons();
     }
 
+    /**
+     * Ensures the contacts list is refreshed every time the activity resumes from a paused state.
+     * This method clears any existing contacts data and fetches the latest list from Firebase,
+     * reflecting any changes made while the activity was not in the foreground. It guarantees that
+     * the displayed contacts are always up-to-date, enhancing the user experience by providing
+     * current information.
+     */
     @Override
     protected void onResume() {
         super.onResume();
-        // Load the contacts from the database and update the adapter
+        // Immediately refresh the contacts list when the activity resumes to reflect any changes.
         loadContactData();
+        // Additionally, ensure the RecyclerView is updated to display the latest data.
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
     }
 
+    /**
+     * Fetches the updated list of contacts from Firebase and refreshes the RecyclerView
+     * adapter to display the latest data. This method ensures the contacts list is always
+     * current, reflecting any changes made to the user's contacts.
+     */
     private void loadContactData() {
         // Clear the existing contacts list
         contacts.clear();
@@ -92,13 +108,9 @@ public class ContactsActivity extends AppCompatActivity {
         adapter = new ContactsAdapter(this, contacts, new ContactsAdapter.ContactClickListener() {
             @Override
             public void onContactClick(String contactId) {
-                FirebaseApi.navigateToMessageActivityWithChatId(ContactsActivity.this, contactId);
-                /*
-                Intent intent = new Intent(ContactsActivity.this, MessageActivity.class);
-                intent.putExtra("contactId", contactId);
-                startActivity(intent);
-
-                 */
+                List<String> contacts = new ArrayList<String> ();
+                contacts.add(contactId);
+                FirebaseApi.findOrCreateChatWithUsers(ContactsActivity.this,contacts, "");
             }
         });
         recyclerView.setAdapter(adapter);

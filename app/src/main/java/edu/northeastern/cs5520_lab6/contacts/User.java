@@ -1,19 +1,13 @@
 package edu.northeastern.cs5520_lab6.contacts;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Represents a contact entity within the application. This class stores information about a
- * contact including their unique identifier, name, a welcome message, and an image URL.
- * The unique identifier is typically used for database references, especially when integrating
- * with Firebase or similar services.
- *
- * The contact's image URL points to an image resource that can be loaded to visually represent
- * the contact, often used in lists or profiles within the app.
+ * Represents a user or contact entity within the application. Contains detailed information
+ * such as a unique identifier, name, username, email, welcome message, image URL, and
+ * a list of contacts. This model is pivotal for managing user data, especially when interfacing
+ * with external database services like Firebase.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 1.1
  */
 public class User {
     private String userId; // Unique identifier for Firebase reference
@@ -22,20 +16,22 @@ public class User {
     private String email; // User's email
     private String welcomeMessage; // User set welcome message
     private String imageUrl; // URL of the contact's image
-    private Contacts contacts;
+    private Contacts contacts; // List of contacts associated with the user
 
     /**
-     * No-argument constructor
+     * Default constructor for creating a User instance without setting any initial values.
      */
     public User () { }
 
     /**
-     * Constructs a new User instance with specified details.
+     * Constructor for creating a User instance with initial values for user details.
      *
-     * @param id The unique identifier for the contact, often used as a reference in databases.
-     * @param name The name of the contact.
-     * @param welcomeMessage A personalized welcome message associated with the contact.
-     * @param imageUrl The URL pointing to the contact's image, used for display purposes.
+     * @param id Unique identifier for the user, commonly used for database referencing.
+     * @param name Full name of the user.
+     * @param username Username of the user.
+     * @param email Email address of the user.
+     * @param welcomeMessage A personal welcome message set by the user.
+     * @param imageUrl URL pointing to the user's profile image.
      */
     public User(String id, String name, String username, String email, String welcomeMessage, String imageUrl) {
         this.userId = id;

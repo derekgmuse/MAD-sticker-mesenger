@@ -2,6 +2,7 @@ package edu.northeastern.cs5520_lab6.api;
 
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,11 +15,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.SignUpActivity;
@@ -31,6 +37,16 @@ import edu.northeastern.cs5520_lab6.messages.Chat;
 import edu.northeastern.cs5520_lab6.messages.Message;
 import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 
+/**
+ * Provides an interface to Firebase Realtime Database operations. This class includes methods to
+ * manage users, contacts, chats, and messages within the app's Firebase database.
+ *
+ * Operations include adding users to the database, managing contacts, searching for users by username,
+ * loading chat and contact data, as well as sending and loading messages for a specific chat.
+ *
+ * @author Tony Wilson
+ * @version 1.0
+ */
 public class FirebaseApi {
     private static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
@@ -38,6 +54,13 @@ public class FirebaseApi {
         //this.databaseReference = FirebaseDatabase.getInstance().getReference();
     }
 
+    /**
+     * Adds a new user to the Firebase Realtime Database under the "users" node. This method
+     * should be called when a new user signs up.
+     *
+     * @param context The context from which this method is called, used for displaying Toast messages.
+     * @param user    The user object to be added to the database.
+     */
     public static void addUserToDatabase(Context context, User user) {
         DatabaseReference usersRef = databaseReference.child("users").child(user.getUserId());
         usersRef.setValue(user).addOnCompleteListener(task -> {
@@ -52,6 +75,15 @@ public class FirebaseApi {
         });
     }
 
+    /**
+     * Adds a new contact to the current user's list of contacts in the Firebase database. If the
+     * contact is successfully added, a callback method is invoked.
+     *
+     * @param context          The context from which this method is called.
+     * @param currentUserId    The ID of the current user.
+     * @param newContactUserId The ID of the new contact to be added.
+     * @param callback         Callback interface for post-operation actions.
+     */
     public static void addContactToUser(Context context, String currentUserId, String newContactUserId, ContactAddedCallback callback) {
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
 
@@ -89,7 +121,12 @@ public class FirebaseApi {
         });
     }
 
-
+    /**
+     * Searches for users in the Firebase database by username. Results are returned via a callback.
+     *
+     * @param username The username to search for.
+     * @param callback Callback interface to handle the search results.
+     */
     public static void searchUsersByUsername(String username, NewContactActivity.UserSearchCallback callback) {
         DatabaseReference usersRef = databaseReference.child("users");
         usersRef.orderByChild("username").equalTo(username)
@@ -113,34 +150,48 @@ public class FirebaseApi {
                 });
     }
 
+    /**
+     * Loads chat data for the current user and notifies the provided adapter of any changes. This
+     * method should be used to populate the UI with chat information.
+     *
+     * @param chatList The list to store the chat data.
+     * @param adapter  The adapter to be notified of data changes.
+     */
     public static void loadChatData(List<Chat> chatList, ChatsAdapter adapter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference chatsRef = database.getReference("chats");
-
-        // Assume currentUserID is obtained from Firebase Authentication
-        String currentUserID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         chatsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                chatList.clear(); // Clear existing data
+                chatList.clear(); // Clear existing data first
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Chat chat = snapshot.getValue(Chat.class);
-                    if (chat != null && chat.getUserIds().contains(currentUserID)) {
+                    if (chat != null && chat.getUserIds().contains(currentUserId)) {
                         chat.setId(snapshot.getKey());
                         chatList.add(chat);
                     }
                 }
+                Log.d("loadChatData", "Number of chats loaded: " + chatList.size());
                 adapter.notifyDataSetChanged(); // Notify the adapter of data changes
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 // Handle possible errors
+                Log.w("loadChatData", "loadChat:onCancelled", databaseError.toException());
             }
         });
     }
 
+    /**
+     * Loads contact data for the current user and notifies the provided adapter of any changes. This
+     * method should be used to populate the UI with contact information.
+     *
+     * @param contacts The list to store the contact data.
+     * @param adapter  The adapter to be notified of data changes.
+     */
     public static void loadContactData(List<User> contacts, GenericAdapterNotifier adapter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference userRef = database.getReference("users");
@@ -191,7 +242,14 @@ public class FirebaseApi {
         });
     }
 
-
+    /**
+     * Loads messages for a specific chat and notifies the provided adapter of any changes. This
+     * method should be used to populate the UI with messages from a chat.
+     *
+     * @param chatId   The ID of the chat for which messages are loaded.
+     * @param messages The list to store the message data.
+     * @param adapter  The adapter to be notified of data changes.
+     */
     public static void loadMessagesForChat(String chatId, List<Message> messages, GenericAdapterNotifier adapter) {
         DatabaseReference messagesRef = FirebaseDatabase.getInstance().getReference("messages").child(chatId);
 
@@ -215,45 +273,68 @@ public class FirebaseApi {
         });
     }
 
-    public static void navigateToMessageActivityWithChatId(Context context, String selectedContactId) {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+    /**
+     * Finds an existing chat with the given participants or creates a new one if it doesn't exist.
+     * Navigates to the MessageActivity with the chat ID once the operation is complete.
+     *
+     * @param context        The context from which this method is called.
+     * @param participantIds A list of participant IDs for the chat.
+     * @param initialMessage The initial message to be sent in the chat.
+     */
+    public static void findOrCreateChatWithUsers(Context context, List<String> participantIds, String initialMessage) {
         DatabaseReference chatsRef = FirebaseDatabase.getInstance().getReference("chats");
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (!participantIds.contains(currentUserId)) {
+            participantIds.add(currentUserId);
+        }
+        // Sort to maintain consistency in ID generation
+        Collections.sort(participantIds);
 
-        // Generate a provisional chatId. Note: This simplistic approach may need refinement.
-        String chatId = (currentUserId.compareTo(selectedContactId) > 0) ? currentUserId + "_" + selectedContactId : selectedContactId + "_" + currentUserId;
+        // Generate a unique identifier based on sorted participant IDs
+        String chatId = TextUtils.join("_", participantIds);
 
         chatsRef.child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.exists()) {
-                    // Fetch the selected contact's name to use in the new chat
-                    usersRef.child(selectedContactId).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            User otherUser = snapshot.getValue(User.class);
-                            if (otherUser != null) {
-                                // Use other user's name as the chat name
-                                List<String> userIds = Arrays.asList(currentUserId, selectedContactId);
-                                Chat newChat = new Chat(chatId, userIds, otherUser.getName(), "", "", "");
-                                chatsRef.child(chatId).setValue(newChat).addOnCompleteListener(task -> {
-                                    if (task.isSuccessful()) {
-                                        // Proceed to MessageActivity after the chat is successfully created
-                                        Intent intent = new Intent(context, MessageActivity.class);
-                                        intent.putExtra("chatId", chatId);
-                                        context.startActivity(intent);
+                    // Chat doesn't exist, create a new chat
+                    final String[] chatName = {""};
+                    Map<String, Boolean> userIdsMap = new HashMap<>();
+                    for (String userId : participantIds) {
+                        userIdsMap.put(userId, true);
+                        // Skip the current user when setting the chat name
+                        if (!userId.equals(currentUserId)) {
+                            usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    User user = snapshot.getValue(User.class);
+                                    if (user != null) {
+                                        chatName[0] = chatName[0].isEmpty() ? user.getName() : chatName[0] + ", " + user.getName();
+                                        // If this is the last user to fetch, create the chat
+                                        if (chatName[0].split(", ").length == (participantIds.size() - 1)) {
+                                            Chat newChat = new Chat(chatId, new ArrayList<>(userIdsMap.keySet()), chatName[0], initialMessage, getCurrentTimestamp(), "");
+                                            chatsRef.child(chatId).setValue(newChat).addOnCompleteListener(task -> {
+                                                if (task.isSuccessful()) {
+                                                    // Navigate to MessageActivity with the new or found chatId
+                                                    Intent intent = new Intent(context, MessageActivity.class);
+                                                    intent.putExtra("chatId", chatId);
+                                                    context.startActivity(intent);
+                                                }
+                                            });
+                                        }
                                     }
-                                });
-                            }
-                        }
+                                }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            // Handle errors, e.g., log or show error message
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    // Handle possible errors
+                                }
+                            });
                         }
-                    });
+                    }
                 } else {
-                    // Chat exists, proceed to MessageActivity
+                    // Chat exists, navigate to MessageActivity with chatId
                     Intent intent = new Intent(context, MessageActivity.class);
                     intent.putExtra("chatId", chatId);
                     context.startActivity(intent);
@@ -267,51 +348,27 @@ public class FirebaseApi {
         });
     }
 
-
-    public static void navigateToMessageActivityWithChatId(Context context, List<String> selectedUserIds) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference chatsRef = database.getReference("chats");
-
-        // Include the current user's ID in the list of participant IDs
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        if (!selectedUserIds.contains(currentUserId)) {
-            selectedUserIds.add(currentUserId);
-        }
-
-        // Query chats where the selectedUserIds are exactly the participants
-        // This is conceptual; the exact implementation will depend on your data structure
-        // and may require custom indexing or more complex queries
-        chatsRef.orderByChild("userIds").equalTo(selectedUserIds.toString()) // This exact match is conceptual
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String chatId = null;
-                        if (dataSnapshot.exists()) {
-                            // Chat exists, extract the chatId
-                            for (DataSnapshot childSnapshot: dataSnapshot.getChildren()) {
-                                chatId = childSnapshot.getKey();
-                                break;
-                            }
-                        } else {
-                            // No chat exists, create a new chat
-                            chatId = chatsRef.push().getKey();
-                            Chat newChat = new Chat(chatId, selectedUserIds, "", "", "", null);
-                            chatsRef.child(chatId).setValue(newChat);
-                        }
-
-                        // Navigate to MessageActivity with chatId
-                        Intent intent = new Intent(context, MessageActivity.class);
-                        intent.putExtra("chatId", chatId);
-                        context.startActivity(intent);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        // Handle possible errors
-                    }
-                });
+    /**
+     * Generates a string representation of the current time using the "HH:mm" format (24-hour format).
+     * This method is useful for creating timestamps for chat messages or other time-sensitive data
+     * in the application.
+     *
+     * @return A string representing the current time in the "HH:mm" format.
+     */
+    private static String getCurrentTimestamp() {
+        SimpleDateFormat sdf = new SimpleDateFormat("ddMMM HH:mm", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
+    /**
+     * Sends a message in a specified chat and updates the chat details accordingly. Notifies
+     * the callback of the operation result.
+     *
+     * @param chatId      The ID of the chat in which the message is sent.
+     * @param messageText The text of the message to be sent.
+     * @param timestamp   The timestamp of the message.
+     * @param callback    Callback interface to handle the operation result.
+     */
     public static void sendMessage(String chatId, String messageText, long timestamp, MessageSendCallback callback) {
         DatabaseReference messagesRef = databaseReference.child("messages").child(chatId);
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid(); // Ensure proper authentication handling
@@ -320,13 +377,13 @@ public class FirebaseApi {
 
         String messageId = messagesRef.push().getKey();
         if (messageId != null) {
-            Message newMessage = new Message(chatId, messageId, messageText, currentUserId, timestamp);
+            Message newMessage = new Message(chatId, messageId, messageText, currentUserId, getCurrentTimestamp());
             messagesRef.child(messageId).setValue(newMessage).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     // Update the chat with the new last message and timestamp
                     Map<String, Object> chatUpdates = new HashMap<>();
                     chatUpdates.put("lastMessage", messageText);
-                    chatUpdates.put("timestamp", Long.toString(timestamp));
+                    chatUpdates.put("timestamp", getCurrentTimestamp());
 
                     // Perform the update on the chat reference
                     chatsRef.updateChildren(chatUpdates).addOnCompleteListener(updateTask -> {
@@ -338,7 +395,6 @@ public class FirebaseApi {
                             if (callback != null) callback.onFailure();
                         }
                     });
-
                 } else {
                     // Notify caller of message send failure
                     if (callback != null) callback.onFailure();
@@ -350,10 +406,16 @@ public class FirebaseApi {
         }
     }
 
+    /**
+     * Callback interface for adding a new contact.
+     */
     public interface ContactAddedCallback {
         void onContactAdded();
     }
 
+    /**
+     * Callback interface for sending a message.
+     */
     public interface MessageSendCallback {
         void onSuccess(Message message);
         void onFailure();
