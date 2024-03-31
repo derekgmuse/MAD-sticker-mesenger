@@ -18,6 +18,9 @@ import edu.northeastern.cs5520_lab6.main.MainActivity;
  * It interacts with Firebase Authentication to verify user credentials. This activity provides a user interface
  * where users can enter their email and password to log in. Additionally, it offers a way to navigate
  * to the SignUpActivity for users who need to create a new account.
+ *
+ * @version 2.0
+ * @author Derek Muse
  */
 public class LogInActivity extends AppCompatActivity {
 

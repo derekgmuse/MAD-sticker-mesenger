@@ -19,6 +19,9 @@ import edu.northeastern.cs5520_lab6.api.FirebaseApi;
  * It handles user input for registration details such as email, password, full name, username, and a welcome message.
  * This activity uses Firebase Authentication to create new user accounts and stores additional user information in the
  * Firebase database.
+ *
+ * @version 2.0
+ * @author Derek Muse
  */
 public class SignUpActivity extends AppCompatActivity {
 

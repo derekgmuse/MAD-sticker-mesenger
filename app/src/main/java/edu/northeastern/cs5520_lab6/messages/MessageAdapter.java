@@ -3,15 +3,19 @@ package edu.northeastern.cs5520_lab6.messages;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.common.server.converter.StringToIntConverter;
+
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
+import edu.northeastern.cs5520_lab6.stickers.StickerEnum;
 
 /**
  * Adapter responsible for managing and binding message data within a {@link RecyclerView} in
@@ -23,7 +27,7 @@ import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
  * @version 1.1
  * @author Tony Wilson
  */
-public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements GenericAdapterNotifier {
+public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> implements GenericAdapterNotifier {
     private List<Message> messages; // List of message objects to display
     private String currentUserId; // ID of the current user to differentiate messages
 
@@ -70,7 +74,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
      */
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
         return new MessageViewHolder(view);
     }
@@ -85,9 +89,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
      * @param position The position of the item within the adapter's data set.
      */
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messages.get(position);
-        ((MessageViewHolder) holder).bind(message);
+        holder.bind(message);
     }
 
     /**
@@ -108,19 +112,37 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
      */
     static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageTextView;
+        ImageView stickerImageView; // ImageView for displaying stickers
 
         MessageViewHolder(View itemView) {
             super(itemView);
             messageTextView = itemView.findViewById(R.id.messageTextView);
+            stickerImageView = itemView.findViewById(R.id.stickerImageView);
         }
 
         /**
-         * Binds a {@link Message} object's text content to this ViewHolder's TextView.
+         * Binds a {@link Message} object to this ViewHolder, displaying either the text content
+         * or the corresponding sticker image based on the message type.
          *
-         * @param message The message object containing the text to be displayed.
+         * @param message The message object to be displayed.
          */
         void bind(Message message) {
-            messageTextView.setText(message.getText());
+            if ("text".equals(message.getMessageType())) {
+                messageTextView.setVisibility(View.VISIBLE);
+                stickerImageView.setVisibility(View.GONE);
+                messageTextView.setText(message.getText());
+            } else if ("sticker".equals(message.getMessageType())) {
+                messageTextView.setVisibility(View.GONE);
+                stickerImageView.setVisibility(View.VISIBLE);
+                // Use the enum to map sticker ID to drawable resource
+                int stickerResId = StickerEnum.getResourceIdById(message.getStickerId());
+                if (stickerResId != -1) {
+                    stickerImageView.setImageResource(stickerResId);
+                } else {
+                    // Handle unknown sticker
+                    stickerImageView.setImageResource(R.drawable.default_sticker);
+                }
+            }
         }
     }
 
@@ -131,6 +153,5 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void notifyAdapterDataSetChanged() {
         notifyDataSetChanged();
-        //scrollToPosition(messages.size() - 1); // Scroll to the last message
     }
 }

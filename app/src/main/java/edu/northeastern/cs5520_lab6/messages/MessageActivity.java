@@ -3,6 +3,7 @@ package edu.northeastern.cs5520_lab6.messages;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -12,6 +13,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -22,6 +24,9 @@ import edu.northeastern.cs5520_lab6.LogInActivity;
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
 import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
+import edu.northeastern.cs5520_lab6.stickers.Sticker;
+import edu.northeastern.cs5520_lab6.stickers.StickerAdapter;
+import edu.northeastern.cs5520_lab6.stickers.StickerEnum;
 
 /**
  * Provides an interactive interface for users to view and send messages within a specific chat.
@@ -40,6 +45,9 @@ public class MessageActivity extends AppCompatActivity {
     private List<Message> messages = new ArrayList<>(); // Message history for the current session
     private String chatId; // Identifier for the current chat
     private String currentUserId; // User ID of the message sender
+    private FloatingActionButton fabStickers; // Button for sticker selection
+    private RecyclerView stickersRecyclerView; // Displays sticker choices
+    private List<Sticker> stickers = new ArrayList<>(); // Stores stickers
 
     /**
      * Initializes the activity, setting up UI components and loading existing messages for the
@@ -67,6 +75,7 @@ public class MessageActivity extends AppCompatActivity {
 
         initializeToolbar();
         setupMessageRecyclerView();
+        setupStickersRecyclerView();
         setupMessageInput();
 
         // Load the data after the recyclerview and adapter is initialized
@@ -114,23 +123,56 @@ public class MessageActivity extends AppCompatActivity {
     }
 
     /**
+     * Configures the RecyclerView for displaying stickers and sets up the stickers adapter.
+     */
+    private void setupStickersRecyclerView() {
+        // Initialize your stickers List
+        stickers.clear(); // Clear existing stickers if any
+        stickers = StickerEnum.getAllStickers();
+
+        stickersRecyclerView = findViewById(R.id.message_stickerRecyclerView);
+
+        // Setup RecyclerView for stickers
+        stickersRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+
+        // StickerAdapter is our adapter for stickers
+        StickerAdapter adapter = new StickerAdapter(stickers, this::onStickerSelected);
+        stickersRecyclerView.setAdapter(adapter);
+    }
+
+    /**
      * Configures the message input field and the send message button, including setting the click
      * listener for sending messages.
      */
     private void setupMessageInput() {
+        fabStickers = findViewById(R.id.message_fab_sticker);
+        fabStickers.setOnClickListener(v -> toggleStickersVisibility());
+
         messageEditText = findViewById(R.id.messageEditText);
+
         sendMessageButton = findViewById(R.id.sendMessageButton);
         sendMessageButton.setOnClickListener(v -> sendMessage());
     }
 
     /**
-     * Handles sending a new message, including updating the UI and the messages list.
+     * Toggles the visibility of the sticker selection view.
+     */
+    private void toggleStickersVisibility() {
+        if (stickersRecyclerView.getVisibility() == View.GONE) {
+            stickersRecyclerView.setVisibility(View.VISIBLE);
+        } else {
+            stickersRecyclerView.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Handles sending messages or stickers based on the input field content or sticker selection.
      */
     private void sendMessage() {
         String messageText = messageEditText.getText().toString().trim();
-        long timestamp = System.currentTimeMillis();
+        //long timestamp = System.currentTimeMillis();
         if (!messageText.isEmpty()) {
-            FirebaseApi.sendMessage(chatId, messageText, timestamp, new FirebaseApi.MessageSendCallback() {
+            FirebaseApi.sendMessage(chatId, messageText, 0, "text", new FirebaseApi.MessageSendCallback() {
                 @Override
                 public void onSuccess(Message message) {
                     // Update UI and clear input field...
@@ -148,6 +190,31 @@ public class MessageActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    /**
+     * Callback for when a sticker is selected. Sends the sticker as a message.
+     * @param sticker The selected Sticker object.
+     */
+    private void onStickerSelected(Sticker sticker) {
+        String stickerId = sticker.getId();
+        //long timestamp = System.currentTimeMillis();
+
+        // Send sticker as a message
+        FirebaseApi.sendMessage(chatId, stickerId, sticker.getCount(), "sticker", new FirebaseApi.MessageSendCallback() {
+            @Override
+            public void onSuccess(Message message) {
+                runOnUiThread(() -> {
+                    // Update your UI
+                    toggleStickersVisibility();
+                });
+            }
+
+            @Override
+            public void onFailure() {
+                runOnUiThread(() -> Toast.makeText(MessageActivity.this, "Failed to send sticker", Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 
     /**

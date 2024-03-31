@@ -7,27 +7,27 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import edu.northeastern.cs5520_lab6.LogInActivity;
-import edu.northeastern.cs5520_lab6.SignUpActivity;
 import edu.northeastern.cs5520_lab6.contacts.Contacts;
 import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 import edu.northeastern.cs5520_lab6.contacts.NewContactActivity;
@@ -36,16 +36,21 @@ import edu.northeastern.cs5520_lab6.main.ChatsAdapter;
 import edu.northeastern.cs5520_lab6.messages.Chat;
 import edu.northeastern.cs5520_lab6.messages.Message;
 import edu.northeastern.cs5520_lab6.messages.MessageActivity;
+import edu.northeastern.cs5520_lab6.stickers.Sticker;
 
 /**
- * Provides an interface to Firebase Realtime Database operations. This class includes methods to
- * manage users, contacts, chats, and messages within the app's Firebase database.
+ * Manages interactions with the Firebase Realtime Database for user, chat, message, and sticker data.
+ * This utility class encapsulates the logic for adding and retrieving users, managing user contacts,
+ * conducting user searches, handling chat sessions, and sending/retrieving messages. It has been
+ * extended to support sticker functionality, allowing users to send stickers as messages and track
+ * sticker usage within chats.
  *
- * Operations include adding users to the database, managing contacts, searching for users by username,
- * loading chat and contact data, as well as sending and loading messages for a specific chat.
+ * Additionally, this class implements methods to adjust chat names dynamically based on the current
+ * user's perspective, enhancing the user experience by displaying only the relevant participant names
+ * in chat overviews.
  *
+ * @version 2.0
  * @author Tony Wilson
- * @version 1.0
  */
 public class FirebaseApi {
     private static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -174,7 +179,10 @@ public class FirebaseApi {
                     }
                 }
                 Log.d("loadChatData", "Number of chats loaded: " + chatList.size());
-                adapter.notifyDataSetChanged(); // Notify the adapter of data changes
+                // Notify the adapter of data changes
+                adapter.notifyDataSetChanged();
+                // After loading chats, adjust chat names
+                adjustChatNamesForCurrentUser(chatList, adapter);
             }
 
             @Override
@@ -184,6 +192,68 @@ public class FirebaseApi {
             }
         });
     }
+
+    /**
+     * Adjusts the names of chats in the provided list to exclude the current user's name,
+     * ensuring that chat names reflect the other participants more accurately. This method
+     * queries the database for user information and updates each chat's name accordingly.
+     *
+     * It is designed to enhance the user interface by displaying chat names that are more
+     * meaningful to the current user, omitting their own name from the list of chat participants.
+     * The method handles the asynchronous nature of database operations and updates the chat
+     * list adapter once all chat names have been adjusted.
+     *
+     * Note: This method may invoke {@link ChatsAdapter#notifyDataSetChanged()} multiple times,
+     * which could impact performance. Consider optimizing if necessary.
+     *
+     * @param chatList The list of {@link Chat} objects to be adjusted.
+     * @param adapter  The adapter used to display the chat list. This adapter is notified to
+     *                 refresh the view once chat names have been adjusted.
+     */
+    private static void adjustChatNamesForCurrentUser(List<Chat> chatList, ChatsAdapter adapter) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
+
+        // Fetch the current user's name
+        userRef.child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User currentUser = dataSnapshot.getValue(User.class);
+                if (currentUser != null) {
+                    // Adjust each chat's name
+                    for (Chat chat : chatList) {
+                        List<String> otherUserIds = new ArrayList<>(chat.getUserIds());
+                        otherUserIds.remove(currentUserId); // Remove current user's ID
+                        StringBuilder otherUserNames = new StringBuilder();
+
+                        for (String userId : otherUserIds) {
+                            // Fetch each user's name
+                            userRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot userSnapshot) {
+                                    User user = userSnapshot.getValue(User.class);
+                                    if (user != null) {
+                                        if (otherUserNames.length() > 0) otherUserNames.append(", ");
+                                        otherUserNames.append(user.getName());
+                                        // Update chat name if last user's name fetched
+                                        if (otherUserNames.toString().split(", ").length == otherUserIds.size()) {
+                                            chat.setName(otherUserNames.toString());
+                                            adapter.notifyDataSetChanged(); // This might be called multiple times, we should consider optimization
+                                        }
+                                    }
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {}
+                            });
+                        }
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
+
 
     /**
      * Loads contact data for the current user and notifies the provided adapter of any changes. This
@@ -274,6 +344,41 @@ public class FirebaseApi {
     }
 
     /**
+     * Loads the current user's stickers from the database, updating a local list. This method
+     * facilitates the display and management of the user's sticker collection within the app,
+     * ensuring the UI reflects the most current data.
+     *
+     * @param stickersListToUpdate The list to be populated with the user's stickers.
+     * @param callback             Callback to notify when the list has been updated.
+     */
+    public static void loadUserStickers(List<Sticker> stickersListToUpdate, GenericAdapterNotifier callback) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userStickersRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId).child("stickers");
+
+        userStickersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                stickersListToUpdate.clear(); // Clear the existing list
+
+                for (DataSnapshot stickerSnapshot : dataSnapshot.getChildren()) {
+                    Sticker sticker = stickerSnapshot.getValue(Sticker.class);
+                    if (sticker != null) {
+                        stickersListToUpdate.add(sticker);
+                    }
+                }
+
+                callback.notifyAdapterDataSetChanged(); // Notify that the data has changed
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("FirebaseApi", "loadUserStickers:onCancelled", databaseError.toException());
+                // Handle possible errors
+            }
+        });
+    }
+
+    /**
      * Finds an existing chat with the given participants or creates a new one if it doesn't exist.
      * Navigates to the MessageActivity with the chat ID once the operation is complete.
      *
@@ -284,6 +389,7 @@ public class FirebaseApi {
     public static void findOrCreateChatWithUsers(Context context, List<String> participantIds, String initialMessage) {
         DatabaseReference chatsRef = FirebaseDatabase.getInstance().getReference("chats");
         DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         if (!participantIds.contains(currentUserId)) {
             participantIds.add(currentUserId);
@@ -303,8 +409,8 @@ public class FirebaseApi {
                     Map<String, Boolean> userIdsMap = new HashMap<>();
                     for (String userId : participantIds) {
                         userIdsMap.put(userId, true);
-                        // Skip the current user when setting the chat name
-                        if (!userId.equals(currentUserId)) {
+                        // Do not Skip the current user when setting the chat name
+                        if(!userId.equals(currentUserId)) {
                             usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -361,45 +467,112 @@ public class FirebaseApi {
     }
 
     /**
-     * Sends a message in a specified chat and updates the chat details accordingly. Notifies
-     * the callback of the operation result.
+     * Sends a message or sticker within a specified chat. If the content type is a text message, it
+     * is sent directly. For stickers, this method handles the addition or update of the sticker count
+     * in the user's sticker collection before sending. It ensures that the chat's last message and
+     * timestamp are updated accordingly. In the case of stickers, a unique format is applied to the
+     * last message for easy identification.
      *
-     * @param chatId      The ID of the chat in which the message is sent.
-     * @param messageText The text of the message to be sent.
-     * @param timestamp   The timestamp of the message.
-     * @param callback    Callback interface to handle the operation result.
+     * @param chatId       The ID of the chat where the message is to be sent.
+     * @param messageText  The content of the message, or the sticker ID if a sticker is being sent.
+     * @param stickerCount The usage count of the sticker being sent, relevant only for sticker messages.
+     * @param type         Indicates whether the message is a "text" or "sticker".
+     * @param callback     Callback to handle the result of the send operation.
      */
-    public static void sendMessage(String chatId, String messageText, long timestamp, MessageSendCallback callback) {
+    public static void sendMessage(String chatId, String messageText, int stickerCount, String type, MessageSendCallback callback) {
         DatabaseReference messagesRef = databaseReference.child("messages").child(chatId);
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid(); // Ensure proper authentication handling
 
         DatabaseReference chatsRef = databaseReference.child("chats").child(chatId);
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
 
         String messageId = messagesRef.push().getKey();
         if (messageId != null) {
-            Message newMessage = new Message(chatId, messageId, messageText, currentUserId, getCurrentTimestamp());
-            messagesRef.child(messageId).setValue(newMessage).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    // Update the chat with the new last message and timestamp
-                    Map<String, Object> chatUpdates = new HashMap<>();
-                    chatUpdates.put("lastMessage", messageText);
-                    chatUpdates.put("timestamp", getCurrentTimestamp());
+            Message newMessage;
+            // handle texts and stickers differently
+            if(type.equals("text")) {
+                newMessage = new Message(chatId, messageId, messageText, currentUserId, getCurrentTimestamp(), type, "-1");
 
-                    // Perform the update on the chat reference
-                    chatsRef.updateChildren(chatUpdates).addOnCompleteListener(updateTask -> {
-                        if (updateTask.isSuccessful()) {
-                            // Notify caller of success
-                            if (callback != null) callback.onSuccess(newMessage);
+                messagesRef.child(messageId).setValue(newMessage).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Update the chat with the new last message and timestamp
+                        Map<String, Object> chatUpdates = new HashMap<>();
+                        chatUpdates.put("lastMessage", messageText);
+                        chatUpdates.put("timestamp", getCurrentTimestamp());
+
+                        // Perform the update on the chat reference
+                        chatsRef.updateChildren(chatUpdates).addOnCompleteListener(updateTask -> {
+                            if (updateTask.isSuccessful()) {
+                                // Notify caller of success
+                                if (callback != null) callback.onSuccess(newMessage);
+                            } else {
+                                // Handle update failure
+                                if (callback != null) callback.onFailure();
+                            }
+                        });
+                    } else {
+                        // Notify caller of message send failure
+                        if (callback != null) callback.onFailure();
+                    }
+                });
+            } else {
+                newMessage = new Message(chatId, messageId, messageText, currentUserId, getCurrentTimestamp(), type, messageText);
+
+                // Perform a transaction to update the user's stickers
+                userRef.runTransaction(new Transaction.Handler() {
+                   @NonNull
+                   @Override
+                   public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                       User user = mutableData.getValue(User.class);
+                       if (user == null) {
+                           return Transaction.success(mutableData); // User does not exist, abort the transaction
+                       }
+
+                       // addSticker modifies the user's stickers list correctly
+                       Sticker stickerToAdd = new Sticker(messageText, stickerCount);
+                       user.addSticker(stickerToAdd); // This method should handle the logic of updating counts
+
+                       // Set the updated user object back into the transaction
+                       mutableData.setValue(user);
+                       return Transaction.success(mutableData);
+                   }
+                    @Override
+                    public void onComplete(@Nullable DatabaseError databaseError, boolean committed, @Nullable DataSnapshot dataSnapshot) {
+                        // Transaction completed
+                        if (committed) {
+                            // Sticker count updated, now send the sticker message
+                            messagesRef.child(messageId).setValue(newMessage).addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    // Sticker count updated, now send the sticker message with a special format
+                                    String stickerMessageFormat = "%sticker%:" + messageText; // Assuming messageText is the sticker ID
+
+                                    // Update the chat with the new last message and timestamp
+                                    Map<String, Object> chatUpdates = new HashMap<>();
+                                    chatUpdates.put("lastMessage", stickerMessageFormat);
+                                    chatUpdates.put("timestamp", getCurrentTimestamp());
+
+                                    // Perform the update on the chat reference
+                                    chatsRef.updateChildren(chatUpdates).addOnCompleteListener(updateTask -> {
+                                        if (updateTask.isSuccessful()) {
+                                            // Notify caller of success
+                                            if (callback != null) callback.onSuccess(newMessage);
+                                        } else {
+                                            // Handle update failure
+                                            if (callback != null) callback.onFailure();
+                                        }
+                                    });
+                                } else {
+                                    // Notify caller of message send failure
+                                    if (callback != null) callback.onFailure();
+                                }
+                            });
                         } else {
-                            // Handle update failure
+                            // Transaction failed to commit
                             if (callback != null) callback.onFailure();
                         }
-                    });
-                } else {
-                    // Notify caller of message send failure
-                    if (callback != null) callback.onFailure();
-                }
-            });
+                    }
+                });
+            }
         } else {
             // Handle the case where messageId could not be generated
             if (callback != null) callback.onFailure();

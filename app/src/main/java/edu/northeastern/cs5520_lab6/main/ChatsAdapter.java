@@ -1,5 +1,6 @@
 package edu.northeastern.cs5520_lab6.main;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.messages.Chat;
+import edu.northeastern.cs5520_lab6.stickers.StickerEnum;
 
 /**
  * Adapter class for a RecyclerView that displays a list of chat sessions. Each chat session is
@@ -71,9 +73,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         Chat chat = chatList.get(position);
-        holder.nameTextView.setText(chat.getName());
-        holder.lastMessageTextView.setText(chat.getLastMessage());
-        holder.timestampTextView.setText(chat.getTimestamp());
+        holder.binder(chat);
         // Load avatar image using stickerId
     }
 
@@ -96,6 +96,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     public class ChatViewHolder extends RecyclerView.ViewHolder {
         public TextView nameTextView;
         public TextView lastMessageTextView;
+        ImageView stickerImageView; // ImageView for displaying stickers
         public TextView timestampTextView;
         public ImageView avatarImageView;
 
@@ -109,6 +110,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
             super(itemView);
             nameTextView = itemView.findViewById(R.id.nameTextView);
             lastMessageTextView = itemView.findViewById(R.id.lastMessageTextView);
+            stickerImageView = itemView.findViewById(R.id.stickerImageView);
             timestampTextView = itemView.findViewById(R.id.timestampTextView);
             avatarImageView = itemView.findViewById(R.id.avatarImageView);
 
@@ -123,6 +125,40 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                     }
                 }
             });
+        }
+
+        /**
+         * Binds chat data to the ViewHolder, setting the chat name, timestamp, and the last message
+         * or sticker. This method differentiates between text messages and sticker messages by checking
+         * the prefix of the last message. If the last message indicates a sticker, it extracts the
+         * sticker ID and displays the corresponding sticker image; otherwise, it displays the text
+         * message.
+         *
+         * @param chat The chat object containing details about the conversation, including the last
+         *             message sent or received in this chat.
+         */
+        void binder(Chat chat) {
+            nameTextView.setText(chat.getName());
+            timestampTextView.setText(chat.getTimestamp());
+            if (chat.getLastMessage().startsWith("%sticker%:")) {
+                // This is a sticker message, extract the sticker ID
+                String stickerId = chat.getLastMessage().substring(10); // Remove the "sticker:" part
+                // Now, use stickerId to display the sticker image
+                lastMessageTextView.setVisibility(View.GONE);
+                stickerImageView.setVisibility(View.VISIBLE);
+                int stickerResId = StickerEnum.getResourceIdById(stickerId);
+                if (stickerResId != -1) {
+                    stickerImageView.setImageResource(stickerResId);
+                } else {
+                    // Handle unknown sticker
+                    stickerImageView.setImageResource(R.drawable.default_sticker);
+                }
+            } else {
+                // This is a regular text message, display it as such
+                lastMessageTextView.setVisibility(View.VISIBLE);
+                stickerImageView.setVisibility(View.GONE);
+                lastMessageTextView.setText(chat.getLastMessage());
+            }
         }
     }
 
