@@ -34,7 +34,7 @@ public class Chat {
      * the chat with all necessary information, making the object ready for use in displaying
      * chat data or storing it in a database.
      *
-     * @param chatId Unique identifier for the chat.
+     * @param id Unique identifier for the chat.
      * @param userIds List of user identifiers who are participants of the chat.
      * @param name Display name for the chat.
      * @param lastMessage Content of the last message exchanged.
@@ -105,6 +105,15 @@ public class Chat {
      * @param key String id from the database
      */
     public void setId(String key) { this.chatId=key; }
+
+    /**
+     * Sets the name associated with the chat or user. This method allows updating the name
+     * attribute, which could represent the name of a chat group or the name of a user, depending
+     * on the context in which it is used.
+     *
+     * @param name The new name to be set.
+     */
+    public void setName(String name) { this.name=name; }
 
     // Setters if needed
     // ...

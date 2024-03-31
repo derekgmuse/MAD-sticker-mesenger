@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
+import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 import edu.northeastern.cs5520_lab6.stickers.Sticker;
 
 /**
@@ -62,13 +64,21 @@ public class StickersFragment extends Fragment {
         recyclerView = view.findViewById(R.id.stickersRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // TODO: Populate this list with our sticker data
+        // Populate this list with our sticker data
         stickerList = new ArrayList<>();
+
+        FirebaseApi.loadUserStickers(stickerList, new GenericAdapterNotifier() {
+            @Override
+            public void notifyAdapterDataSetChanged() {
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged(); // Refresh the RecyclerView with new data
+                }
+            }
+        });
+
         adapter = new StickersAdapter(stickerList);
         recyclerView.setAdapter(adapter);
 
         return view;
     }
-
-    // TODO: Add methods to update stickerList and refresh the adapter as needed
 }

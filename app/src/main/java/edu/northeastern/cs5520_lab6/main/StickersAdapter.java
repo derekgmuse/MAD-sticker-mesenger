@@ -12,6 +12,7 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.stickers.Sticker;
+import edu.northeastern.cs5520_lab6.stickers.StickerEnum;
 
 /**
  * Adapter for displaying a list of stickers in a RecyclerView. Each sticker item shows an image
@@ -58,7 +59,7 @@ public class StickersAdapter extends RecyclerView.Adapter<StickersAdapter.Sticke
     @Override
     public void onBindViewHolder(@NonNull StickerViewHolder holder, int position) {
         Sticker sticker = stickerList.get(position);
-        holder.countTextView.setText(String.valueOf(sticker.getCount()));
+        holder.bind(sticker);
         // Load sticker image using stickerId
     }
 
@@ -89,6 +90,24 @@ public class StickersAdapter extends RecyclerView.Adapter<StickersAdapter.Sticke
             super(itemView);
             stickerImageView = itemView.findViewById(R.id.stickerImageView);
             countTextView = itemView.findViewById(R.id.countTextView);
+        }
+
+        /**
+         * Binds a sticker object to the ViewHolder, updating the UI components to display the sticker's
+         * usage count and image. If the sticker's image resource ID can be found based on its ID, that
+         * image is displayed. Otherwise, a default image is used to indicate an unknown sticker.
+         *
+         * @param sticker The sticker object containing the information to be displayed.
+         */
+        void bind(Sticker sticker) {
+            countTextView.setText(String.valueOf(sticker.getCount()));
+            int stickerResId = StickerEnum.getResourceIdById(sticker.getId());
+            if (stickerResId != -1) {
+                stickerImageView.setImageResource(stickerResId);
+            } else {
+                // Handle unknown sticker
+                stickerImageView.setImageResource(R.drawable.default_sticker);
+            }
         }
     }
 }

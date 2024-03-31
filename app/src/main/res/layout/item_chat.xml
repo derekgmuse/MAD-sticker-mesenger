@@ -36,6 +36,16 @@
             android:textSize="14sp"
             android:text="Last message..." />
 
+        <ImageView
+            android:id="@+id/stickerImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/default_sticker"
+            android:layout_toEndOf="@id/avatarImageView"
+            android:layout_below="@id/nameTextView"
+            android:layout_gravity="start|center_vertical"/>
+
         <TextView
             android:id="@+id/timestampTextView"
             android:layout_width="wrap_content"

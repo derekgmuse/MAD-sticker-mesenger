@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
+import edu.northeastern.cs5520_lab6.api.FirebaseApi;
+import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 import edu.northeastern.cs5520_lab6.stickers.Cost;
+import edu.northeastern.cs5520_lab6.stickers.Sticker;
 
 /**
  * Displays a list of individual costs associated with stickers in a RecyclerView and shows the
@@ -25,13 +28,14 @@ import edu.northeastern.cs5520_lab6.stickers.Cost;
  * calculated based on the individual costs displayed in the list.
  *
  * @author Tony Wilson
- * @version 1.0
+ * @version 2.0
  */
 public class CostsFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private CostsAdapter adapter;
     private List<Cost> costList;
+    private List<Sticker> stickerList;
     private TextView totalCostTextView;
 
     /**
@@ -61,15 +65,43 @@ public class CostsFragment extends Fragment {
         recyclerView = view.findViewById(R.id.costsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // TODO: Populate this list with our cost data
+        // Initialize lists
+        stickerList = new ArrayList<>();
         costList = new ArrayList<>();
+
+        // Initialize adapter
         adapter = new CostsAdapter(costList);
         recyclerView.setAdapter(adapter);
 
-        // TODO: Calculate total cost and display it
-        // TODO: Initialize RecyclerView adapter for costs and set it to the costsRecyclerView
+        // Populate this list with our sticker data
+        FirebaseApi.loadUserStickers(stickerList, new GenericAdapterNotifier() {
+            @Override
+            public void notifyAdapterDataSetChanged() {
+                // Populate this list with our cost data
+                buildCost();
+                updateTotalCost();
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged(); // Refresh the RecyclerView with new data
+                }
+            }
+        });
 
         return view;
+    }
+
+    /**
+     * Iterates over the list of stickers and creates a corresponding {@link Cost} object for each
+     * one. This method is used to generate a list of costs associated with the use of stickers,
+     * based on their usage count and predefined cost per use. After building the cost list,
+     * it notifies the adapter to refresh the display, ensuring the UI reflects the most current
+     * sticker cost data.
+     */
+    private void buildCost() {
+        for(Sticker sticker : stickerList) {
+            Cost cost = new Cost(sticker);
+            costList.add(cost);
+        }
+        adapter.notifyDataSetChanged();
     }
 
     /**
@@ -78,8 +110,10 @@ public class CostsFragment extends Fragment {
      * total remains accurate.
      */
     private void updateTotalCost() {
-        // Placeholder for actual calculation
         double totalCost = 0.0;
+        for(Cost cost : costList) {
+            totalCost += cost.getTotalCost();
+        }
         // This method should be called whenever the costs data changes.
         totalCostTextView.setText(String.format("Total Cost: $%.2f", totalCost));
     }

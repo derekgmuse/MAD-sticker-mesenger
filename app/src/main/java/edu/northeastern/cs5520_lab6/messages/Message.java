@@ -15,6 +15,8 @@ public class Message {
     private String text;    // Text content of the message
     private String senderId; // Identifier of the user who sent the message
     private String timestamp;  // Epoch timestamp indicating when the message was sent
+    private String messageType; // "text" or "sticker"
+    private String stickerId; // Used if messageType is "sticker"
 
     /**
      * Default constructor for creating an instance of Message. This is particularly used
@@ -23,21 +25,25 @@ public class Message {
     public Message() { }
 
     /**
-     * Constructs a Message instance with all necessary details provided. This constructor
-     * initializes a message ready for sending, displaying, or storing.
+     * Initializes a new Message object with specified parameters. Suitable for creating
+     * a message ready to be sent or stored.
      *
-     * @param chatId    The identifier of the chat to which the message belongs.
-     * @param id        Unique identifier for the message within its chat.
-     * @param text      The text content of the message.
-     * @param senderId  The identifier of the user who sent the message.
-     * @param timestamp Epoch timestamp representing when the message was sent.
+     * @param chatId The chat's ID to which this message belongs.
+     * @param id The unique message ID within the chat.
+     * @param text The message's text content.
+     * @param senderId The ID of the user sending this message.
+     * @param timestamp The timestamp indicating when the message was sent.
+     * @param messageType The type of the message, distinguishing between text and sticker messages.
+     * @param stickerId The ID of the sticker, relevant for sticker messages.
      */
-    public Message(String chatId, String id, String text, String senderId, String timestamp) {
+    public Message(String chatId, String id, String text, String senderId, String timestamp, String messageType, String stickerId) {
         this.chatId = chatId;
         this.id = id;
         this.text = text;
         this.senderId = senderId;
         this.timestamp = timestamp;
+        this.messageType = messageType;
+        this.stickerId = stickerId;
     }
 
     // Getters
@@ -75,6 +81,24 @@ public class Message {
      */
     public String getTimestamp() { return timestamp; }
 
+    /**
+     * Retrieves the type of the message, indicating whether it is a text message or a sticker.
+     *
+     * @return A string representing the message type ("text" or "sticker").
+     */
+    public String getMessageType() { return messageType; }
+
+    /**
+     * Retrieves the unique identifier of the sticker, applicable if the message type is "sticker".
+     *
+     * @return The sticker ID as a string, or null if the message type is not a sticker.
+     */
+    public String getStickerId() { return stickerId; }
+
+
+
+
+
     // Setters, if you need to modify the messages after creation
 
     /**
@@ -100,4 +124,20 @@ public class Message {
      * @param timestamp The new timestamp for the message.
      */
     public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+
+    /**
+     * Sets the type of the message. This method allows changing the message's type after it has
+     * been created, either to "text" or "sticker".
+     *
+     * @param messageType The new message type to be set.
+     */
+    public void setMessageType(String messageType) { this.messageType = messageType; }
+
+    /**
+     * Sets the unique identifier for the sticker, applicable if the message type is "sticker".
+     * This method allows associating a different sticker with the message after it has been created.
+     *
+     * @param stickerId The new sticker ID to be set.
+     */
+    public void setStickerId(String stickerId) { this.stickerId = stickerId; }
 }

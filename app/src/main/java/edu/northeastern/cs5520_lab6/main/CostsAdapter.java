@@ -12,6 +12,7 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.stickers.Cost;
+import edu.northeastern.cs5520_lab6.stickers.StickerEnum;
 
 /**
  * Manages the display of sticker costs in a list format within a RecyclerView. Utilizes a
@@ -60,8 +61,7 @@ public class CostsAdapter extends RecyclerView.Adapter<CostsAdapter.CostViewHold
     @Override
     public void onBindViewHolder(@NonNull CostViewHolder holder, int position) {
         Cost cost = costList.get(position);
-        holder.countTextView.setText(String.valueOf(cost.getCount()));
-        holder.totalCostTextView.setText(String.format("$%.2f", cost.getTotalCost()));
+        holder.bind(cost);
         // Load sticker image using stickerId
     }
 
@@ -93,6 +93,26 @@ public class CostsAdapter extends RecyclerView.Adapter<CostsAdapter.CostViewHold
             stickerImageView = itemView.findViewById(R.id.stickerImageView);
             countTextView = itemView.findViewById(R.id.countTextView);
             totalCostTextView = itemView.findViewById(R.id.totalCostTextView);
+        }
+
+        /**
+         * Binds a {@link Cost} object to the ViewHolder, setting the sticker image, usage count,
+         * and total cost in the corresponding views. This method ensures that the sticker's visual
+         * representation and its associated cost details are accurately displayed within each
+         * RecyclerView item.
+         *
+         * @param cost The cost object containing details about a specific sticker's usage and cost.
+         */
+        void bind(Cost cost) {
+            int stickerResId = StickerEnum.getResourceIdById(cost.getStickerId());
+            if (stickerResId != -1) {
+                stickerImageView.setImageResource(stickerResId);
+            } else {
+                // Handle unknown sticker by displaying a default sticker image
+                stickerImageView.setImageResource(R.drawable.default_sticker);
+            }
+            countTextView.setText(String.valueOf(cost.getCount()));
+            totalCostTextView.setText(String.format("$%.2f", cost.getTotalCost()));
         }
     }
 }
