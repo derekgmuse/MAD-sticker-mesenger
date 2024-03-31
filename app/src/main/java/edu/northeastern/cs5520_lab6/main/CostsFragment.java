@@ -74,14 +74,15 @@ public class CostsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         // Populate this list with our sticker data
-        FirebaseApi.loadUserStickers(stickerList, new GenericAdapterNotifier() {
+        FirebaseApi.loadUserStickers(new FirebaseApi.StickerDataCallback() {
             @Override
-            public void notifyAdapterDataSetChanged() {
-                // Populate this list with our cost data
+            public void onStickersLoaded(List<Sticker> updatedStickers) {
+                stickerList.clear();
+                stickerList.addAll(updatedStickers);
                 buildCost();
                 updateTotalCost();
-                if (adapter != null) {
-                    adapter.notifyDataSetChanged(); // Refresh the RecyclerView with new data
+                if(adapter != null) {
+                    adapter.notifyDataSetChanged(); // Now the data is fully synchronized
                 }
             }
         });

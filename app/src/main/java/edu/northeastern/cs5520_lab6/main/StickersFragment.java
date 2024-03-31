@@ -67,17 +67,17 @@ public class StickersFragment extends Fragment {
         // Populate this list with our sticker data
         stickerList = new ArrayList<>();
 
-        FirebaseApi.loadUserStickers(stickerList, new GenericAdapterNotifier() {
-            @Override
-            public void notifyAdapterDataSetChanged() {
-                if (adapter != null) {
-                    adapter.notifyDataSetChanged(); // Refresh the RecyclerView with new data
-                }
-            }
-        });
-
         adapter = new StickersAdapter(stickerList);
         recyclerView.setAdapter(adapter);
+
+        FirebaseApi.loadUserStickers(new FirebaseApi.StickerDataCallback() {
+            @Override
+            public void onStickersLoaded(List<Sticker> updatedStickers) {
+                stickerList.clear();
+                stickerList.addAll(updatedStickers);
+                adapter.notifyDataSetChanged(); // Now the data is fully synchronized
+            }
+        });
 
         return view;
     }

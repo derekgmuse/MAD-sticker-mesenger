@@ -351,29 +351,28 @@ public class FirebaseApi {
      * @param stickersListToUpdate The list to be populated with the user's stickers.
      * @param callback             Callback to notify when the list has been updated.
      */
-    public static void loadUserStickers(List<Sticker> stickersListToUpdate, GenericAdapterNotifier callback) {
+    public static void loadUserStickers(StickerDataCallback callback) {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference userStickersRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId).child("stickers");
 
         userStickersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                stickersListToUpdate.clear(); // Clear the existing list
-
+                List<Sticker> stickers = new ArrayList<>();
                 for (DataSnapshot stickerSnapshot : dataSnapshot.getChildren()) {
                     Sticker sticker = stickerSnapshot.getValue(Sticker.class);
                     if (sticker != null) {
-                        stickersListToUpdate.add(sticker);
+                        stickers.add(sticker);
                     }
                 }
-
-                callback.notifyAdapterDataSetChanged(); // Notify that the data has changed
+                if (callback != null) {
+                    callback.onStickersLoaded(stickers);
+                }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 Log.w("FirebaseApi", "loadUserStickers:onCancelled", databaseError.toException());
-                // Handle possible errors
             }
         });
     }
@@ -594,4 +593,7 @@ public class FirebaseApi {
         void onFailure();
     }
 
+    public interface StickerDataCallback {
+        void onStickersLoaded(List<Sticker> stickers);
+    }
 }
