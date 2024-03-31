@@ -348,7 +348,6 @@ public class FirebaseApi {
      * facilitates the display and management of the user's sticker collection within the app,
      * ensuring the UI reflects the most current data.
      *
-     * @param stickersListToUpdate The list to be populated with the user's stickers.
      * @param callback             Callback to notify when the list has been updated.
      */
     public static void loadUserStickers(StickerDataCallback callback) {

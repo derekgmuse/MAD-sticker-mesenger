@@ -14,7 +14,6 @@ import java.util.List;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.api.FirebaseApi;
-import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 import edu.northeastern.cs5520_lab6.stickers.Cost;
 import edu.northeastern.cs5520_lab6.stickers.Sticker;
 

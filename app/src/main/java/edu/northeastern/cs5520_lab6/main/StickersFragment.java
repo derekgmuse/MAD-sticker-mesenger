@@ -1,6 +1,8 @@
 package edu.northeastern.cs5520_lab6.main;
 
 import android.os.Bundle;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -80,5 +82,17 @@ public class StickersFragment extends Fragment {
         });
 
         return view;
+    }
+
+    public void refreshContent() {
+        // Code to reload your stickers and update the UI
+        FirebaseApi.loadUserStickers(new FirebaseApi.StickerDataCallback() {
+            @Override
+            public void onStickersLoaded(List<Sticker> updatedStickers) {
+                stickerList.clear();
+                stickerList.addAll(updatedStickers);
+                adapter.notifyDataSetChanged(); // Now the data is fully synchronized
+            }
+        });
     }
 }

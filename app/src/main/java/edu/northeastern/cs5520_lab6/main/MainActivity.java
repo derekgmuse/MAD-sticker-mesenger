@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -14,6 +15,7 @@ import com.google.android.material.tabs.TabLayout;
 
 import edu.northeastern.cs5520_lab6.R;
 import edu.northeastern.cs5520_lab6.contacts.ContactsActivity;
+import edu.northeastern.cs5520_lab6.api.MessageListenerService;
 
 /**
  * Main activity of the application, hosting the primary user interface components. This activity
@@ -49,6 +51,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        /*
+        Intent serviceIntent = new Intent(this, MessageListenerService.class);
+        startForegroundService(serviceIntent);
+        */
+
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
         fab = findViewById(R.id.fab);
@@ -63,6 +70,26 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, ContactsActivity.class);
             startActivity(intent);
         });
+
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // Not needed for this use case
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                // Check if the selected page is your target tab
+                if (position == 1) { // Assuming position 1 is your StickersFragment
+                    refreshStickersFragment();
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                // Not needed for this use case
+            }
+        });
     }
 
     /**
@@ -73,6 +100,14 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapter);
+    }
+
+    private void refreshStickersFragment() {
+        // Find the StickersFragment instance and call a method to refresh its content
+        Fragment page = getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.view_pager + ":" + 1);
+        if (page != null) {
+            ((StickersFragment) page).refreshContent(); // Ensure you have this method in your StickersFragment
+        }
     }
 
     /**
