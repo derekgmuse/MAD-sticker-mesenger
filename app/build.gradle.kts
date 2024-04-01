@@ -7,6 +7,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("S:\\Northeastern University\\CS_5520 Mobile App Development\\KeyStore.jks")
+            keyAlias = "labkey"
+            storePassword = "Northeastern"
+            keyPassword = "Northeastern"
+        }
+    }
     namespace = "edu.northeastern.cs5520_lab6"
     compileSdk = 34
 
@@ -18,6 +26,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig = signingConfigs.getByName("release")
     }
 
     buildTypes {
