@@ -1,12 +1,16 @@
 package edu.northeastern.cs5520_lab6.main;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -48,7 +52,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        /*
+        Need to first check if the user has permitted notifications
+        Android versions including and after Tiramisu need user permission
+        If the user has not granted permission, a request permissions
+        pop up asks whether or not the user would like to receive permissions
+        and modifies accordingly
+        source - https://www.youtube.com/watch?v=vyt20Gg2Ckg
+         */
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            if(ContextCompat.checkSelfPermission(MainActivity.this,
+                    android.Manifest.permission.POST_NOTIFICATIONS)!=
+                    PackageManager.PERMISSION_GRANTED){
 
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
+        // Setup UI components
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
         fab = findViewById(R.id.fab);
@@ -63,6 +85,36 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, ContactsActivity.class);
             startActivity(intent);
         });
+
+        /**
+         * Monitors page changes within the ViewPager. Specifically, it checks if the currently selected
+         * page is the Stickers tab. If so, it triggers a refresh of the StickersFragment, ensuring that
+         * the latest stickers data is displayed. This method is part of the ViewPager's onPageChangeListener,
+         * which responds to new pages being selected by the user.
+         *
+         * @param position The index position of the currently selected page in the ViewPager. This index is
+         * used to determine if the StickersFragment is the current page.
+         */
+
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // Not needed for this use case
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                // Check if the selected page is target tab
+                if (position == 1) { // Position 1 is the StickersFragment
+                    refreshStickersFragment();
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                // Not needed for this use case
+            }
+        });
     }
 
     /**
@@ -73,6 +125,22 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapter);
+    }
+
+    /**
+     * Refreshes the content of the StickersFragment if it is currently instantiated and visible to the user.
+     * This method locates the StickersFragment using a FragmentManager and a unique tag that identifies the
+     * fragment within the ViewPager. If the fragment is found, it calls the fragment's refreshContent() method
+     * to update its UI with the latest data. This is particularly useful for ensuring that the sticker collection
+     * displayed to the user is up-to-date following any changes to the dataset or when the fragment becomes visible
+     * after being selected in the ViewPager.
+     */
+    private void refreshStickersFragment() {
+        // Find the StickersFragment instance and call a method to refresh its content
+        Fragment page = getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.view_pager + ":" + 1);
+        if (page != null) {
+            ((StickersFragment) page).refreshContent();
+        }
     }
 
     /**

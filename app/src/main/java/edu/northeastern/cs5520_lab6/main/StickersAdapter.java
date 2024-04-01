@@ -31,9 +31,7 @@ public class StickersAdapter extends RecyclerView.Adapter<StickersAdapter.Sticke
      *
      * @param stickerList The initial list of stickers to display.
      */
-    public StickersAdapter(List<Sticker> stickerList) {
-        this.stickerList = stickerList;
-    }
+    public StickersAdapter(List<Sticker> stickerList) { this.stickerList = stickerList; }
 
     /**
      * Creates new views (invoked by the layout manager) for each item in the stickerList.

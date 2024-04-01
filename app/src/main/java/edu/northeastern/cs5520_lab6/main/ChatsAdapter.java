@@ -142,7 +142,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
             timestampTextView.setText(chat.getTimestamp());
             if (chat.getLastMessage().startsWith("%sticker%:")) {
                 // This is a sticker message, extract the sticker ID
-                String stickerId = chat.getLastMessage().substring(10); // Remove the "sticker:" part
+                String stickerId = chat.getLastMessage().substring(10); // Remove the "%sticker%:" part
                 // Now, use stickerId to display the sticker image
                 lastMessageTextView.setVisibility(View.GONE);
                 stickerImageView.setVisibility(View.VISIBLE);

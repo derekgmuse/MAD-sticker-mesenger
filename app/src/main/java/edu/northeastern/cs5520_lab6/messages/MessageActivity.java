@@ -126,7 +126,7 @@ public class MessageActivity extends AppCompatActivity {
      * Configures the RecyclerView for displaying stickers and sets up the stickers adapter.
      */
     private void setupStickersRecyclerView() {
-        // Initialize your stickers List
+        // Initialize our stickers List
         stickers.clear(); // Clear existing stickers if any
         stickers = StickerEnum.getAllStickers();
 
@@ -226,6 +226,7 @@ public class MessageActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
             finish();
             return true;
         }

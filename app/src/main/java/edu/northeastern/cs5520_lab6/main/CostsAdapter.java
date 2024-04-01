@@ -62,7 +62,6 @@ public class CostsAdapter extends RecyclerView.Adapter<CostsAdapter.CostViewHold
     public void onBindViewHolder(@NonNull CostViewHolder holder, int position) {
         Cost cost = costList.get(position);
         holder.bind(cost);
-        // Load sticker image using stickerId
     }
 
     /**
