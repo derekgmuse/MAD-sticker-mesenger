@@ -103,7 +103,7 @@ public class ChatsFragment extends Fragment {
      */
     void notifyNow(NotificationManager notificationManager, Notification notification) {
         Log.d("TAG", "notifyNow: count me ");
-        if(onStartUp && count>1) {
+        if(onStartUp && count>0) {
             notificationManager.notify(123456, notification);
         } else {
             onStartUp = true;
