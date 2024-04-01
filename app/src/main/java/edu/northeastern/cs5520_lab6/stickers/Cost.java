@@ -48,7 +48,10 @@ public class Cost {
         this.count = sticker.getCount();
         this.costPerUse = StickerEnum.getCostPerSticker(stickerId);
     }
+
+
     // Getters for the class properties
+
 
     /**
      * Returns the sticker's unique identifier.
@@ -85,6 +88,4 @@ public class Cost {
     public double getTotalCost() {
         return count * costPerUse;
     }
-
-    // Optionally, we can add setters if needed
 }

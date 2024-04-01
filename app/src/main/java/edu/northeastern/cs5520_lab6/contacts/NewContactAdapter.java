@@ -143,4 +143,3 @@ public class NewContactAdapter extends RecyclerView.Adapter<NewContactAdapter.Vi
         notifyDataSetChanged();
     }
 }
-

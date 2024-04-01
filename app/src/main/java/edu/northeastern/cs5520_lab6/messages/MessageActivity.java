@@ -126,7 +126,7 @@ public class MessageActivity extends AppCompatActivity {
      * Configures the RecyclerView for displaying stickers and sets up the stickers adapter.
      */
     private void setupStickersRecyclerView() {
-        // Initialize your stickers List
+        // Initialize our stickers List
         stickers.clear(); // Clear existing stickers if any
         stickers = StickerEnum.getAllStickers();
 

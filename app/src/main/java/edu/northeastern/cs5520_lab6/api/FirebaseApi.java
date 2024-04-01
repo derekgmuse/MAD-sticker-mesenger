@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -33,27 +34,34 @@ import edu.northeastern.cs5520_lab6.contacts.GenericAdapterNotifier;
 import edu.northeastern.cs5520_lab6.contacts.NewContactActivity;
 import edu.northeastern.cs5520_lab6.contacts.User;
 import edu.northeastern.cs5520_lab6.main.ChatsAdapter;
+import edu.northeastern.cs5520_lab6.main.ChatsFragment;
 import edu.northeastern.cs5520_lab6.messages.Chat;
 import edu.northeastern.cs5520_lab6.messages.Message;
 import edu.northeastern.cs5520_lab6.messages.MessageActivity;
 import edu.northeastern.cs5520_lab6.stickers.Sticker;
 
 /**
- * Manages interactions with the Firebase Realtime Database for user, chat, message, and sticker data.
- * This utility class encapsulates the logic for adding and retrieving users, managing user contacts,
- * conducting user searches, handling chat sessions, and sending/retrieving messages. It has been
- * extended to support sticker functionality, allowing users to send stickers as messages and track
- * sticker usage within chats.
+ * Manages interactions with the Firebase Realtime Database for user, chat, message, and sticker data,
+ * encapsulating the logic for a comprehensive range of operations including user registration,
+ * contact management, user searches, chat session handling, and message transactions. This class
+ * has been significantly enhanced in version 2.0 to include full support for sticker functionality,
+ * allowing users not only to send stickers within messages but also to track sticker usage counts
+ * across chat sessions.
  *
- * Additionally, this class implements methods to adjust chat names dynamically based on the current
- * user's perspective, enhancing the user experience by displaying only the relevant participant names
- * in chat overviews.
+ * Dynamic chat name adjustment based on the current user's perspective is a key feature, ensuring
+ * chat lists display only relevant participant names, thereby improving user experience. Error handling
+ * is robust across all operations, with performance considerations taken into account to ensure efficient
+ * real-time data synchronization without compromising security. New in this version is a detailed approach
+ * to sticker management, where each sticker sent updates the user's sticker collection count, and sticker
+ * messages are uniquely formatted for easy identification.
  *
  * @version 2.0
  * @author Tony Wilson
  */
+
 public class FirebaseApi {
     private static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+    //private static boolean onStartUp = false;
 
     public FirebaseApi() {
         //this.databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -181,6 +189,7 @@ public class FirebaseApi {
                 Log.d("loadChatData", "Number of chats loaded: " + chatList.size());
                 // Notify the adapter of data changes
                 adapter.notifyDataSetChanged();
+
                 // After loading chats, adjust chat names
                 adjustChatNamesForCurrentUser(chatList, adapter);
             }
@@ -191,6 +200,112 @@ public class FirebaseApi {
                 Log.w("loadChatData", "loadChat:onCancelled", databaseError.toException());
             }
         });
+    }
+
+    /**
+     * Defines a callback interface for responding to the loading of chat data. This interface
+     * is used to execute code after chat data has been successfully loaded from the Firebase Realtime
+     * Database, allowing for the dynamic update of UI components or other necessary post-load processing.
+     */
+    public interface DataLoadListener {
+        /**
+         * Called when chat data is successfully loaded. This method provides the loaded {@link Chat} object
+         * for use, such as updating the UI to reflect new or changed chat data. Additionally, it indicates
+         * whether the loading occurred as part of the initial application startup or due to a subsequent update,
+         * allowing for differentiated handling of chat data based on its context of loading.
+         *
+         * @param chat The {@link Chat} object that was loaded, containing the chat's details.
+         */
+        void onDataLoaded(Chat chat);
+    }
+
+    /**
+     * Attaches a listener to the "chats" reference in the Firebase Realtime Database to listen for
+     * real-time updates to chat data. This method is particularly useful for updating the app's UI
+     * in response to the addition of new chats or updates to existing ones where the current user
+     * is a participant.
+     *
+     * The listener is notified of new or updated chats through the {@link DataLoadListener} interface,
+     * which must be implemented by the caller to handle the chat data once it's loaded or updated.
+     * This allows for flexible handling of chat data changes, enabling the app to respond dynamically
+     * to real-time database events.
+     *
+     * @param listener An implementation of {@link DataLoadListener} to handle the callback when
+     *                 chat data is loaded or updated. The listener is called with the loaded or updated
+     *                 {@link Chat} object, allowing the caller to update the UI or perform other actions
+     *                 in response to chat data changes.
+     */
+    public static void attachChatListener(DataLoadListener listener) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference chatsRef = database.getReference("chats");
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        ChildEventListener childEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Chat chat = snapshot.getValue(Chat.class);
+                if (chat != null && chat.getUserIds().contains(currentUserId)) {
+                    DatabaseReference messageRef = database.getReference("messages").child(chat.getId());
+                    messageRef.orderByKey().limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            for (DataSnapshot messageSnapshot: snapshot.getChildren()) {
+                                Message message = messageSnapshot.getValue(Message.class);
+                                if(message != null && !message.getSenderId().equals(currentUserId)) {
+                                    adjustChatNamesForCurrentUser(chat, listener);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Log.w("attachChatListener", "loadMessage:onCancelled: ", error.toException() );
+                        }
+                    });
+
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Chat chat = snapshot.getValue(Chat.class);
+                if (chat != null && chat.getUserIds().contains(currentUserId)) {
+                    DatabaseReference messageRef = database.getReference("messages").child(chat.getId());
+                    messageRef.orderByKey().limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            for (DataSnapshot messageSnapshot: snapshot.getChildren()) {
+                                Message message = messageSnapshot.getValue(Message.class);
+                                if(message != null && !message.getSenderId().equals(currentUserId)) {
+                                    adjustChatNamesForCurrentUser(chat, listener);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Log.w("attachChatListener", "loadMessage:onCancelled: ", error.toException() );
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.w("attachChatListener", "loadChat: onCancelled", databaseError.toException());
+            }
+        };
+        chatsRef.addChildEventListener(childEventListener);
     }
 
     /**
@@ -254,6 +369,66 @@ public class FirebaseApi {
         });
     }
 
+    /**
+     * Dynamically adjusts the name of a given chat to exclude the current user's name, creating a more
+     * relevant display name based on the other participants in the chat. This method queries the
+     * Firebase Realtime Database to fetch the names of the other chat participants and then updates the
+     * chat's name accordingly.
+     *
+     * Once the chat name has been adjusted to reflect only the other participants, the method notifies
+     * a provided {@link DataLoadListener} with the updated {@link Chat} object. This allows for the
+     * dynamic update of chat display names in the UI or elsewhere in the application, enhancing the
+     * user experience by ensuring chat names are displayed in a contextually relevant manner.
+     *
+     * @param chat The {@link Chat} object to be adjusted. This object should contain the IDs of all
+     *             participants, including the current user.
+     * @param listener A {@link DataLoadListener} that will be notified with the updated chat object
+     *                 after the chat name has been adjusted. This listener allows for the execution of
+     *                 further actions in response to the chat name update, such as UI refreshes.
+     */
+    private static void adjustChatNamesForCurrentUser(Chat chat, DataLoadListener listener) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
+
+        // Fetch the current user's name
+        userRef.child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User currentUser = dataSnapshot.getValue(User.class);
+                if (currentUser != null) {
+                    // Adjust chat's name
+                    List<String> otherUserIds = new ArrayList<>(chat.getUserIds());
+                    otherUserIds.remove(currentUserId); // Remove current user's ID
+                    StringBuilder otherUserNames = new StringBuilder();
+
+                    for (String userId : otherUserIds) {
+                        // Fetch each user's name
+                        userRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot userSnapshot) {
+                                User user = userSnapshot.getValue(User.class);
+                                if (user != null) {
+                                    if (otherUserNames.length() > 0) otherUserNames.append(", ");
+                                    otherUserNames.append(user.getName());
+                                    // Update chat name if last user's name fetched
+                                    if (otherUserNames.toString().split(", ").length == otherUserIds.size()) {
+                                        chat.setName(otherUserNames.toString());
+                                        if(listener != null) {
+                                            listener.onDataLoaded(chat);
+                                        }
+                                    }
+                                }
+                            }
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {}
+                        });
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
 
     /**
      * Loads contact data for the current user and notifies the provided adapter of any changes. This

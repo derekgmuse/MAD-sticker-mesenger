@@ -75,8 +75,6 @@ public class NewGroupAdapter extends RecyclerView.Adapter<NewGroupAdapter.Contac
         User user = users.get(position);
         holder.nameTextView.setText(user.getName());
         holder.messageTextView.setText(user.getWelcomeMessage());
-        // Placeholder for image loading, assuming usage of a library like Glide or Picasso
-        // Glide.with(holder.itemView.getContext()).load(user.getImageUrl()).into(holder.imageView);
     }
 
     /**

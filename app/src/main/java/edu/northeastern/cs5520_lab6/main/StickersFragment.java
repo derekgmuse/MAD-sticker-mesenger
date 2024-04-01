@@ -30,6 +30,9 @@ import edu.northeastern.cs5520_lab6.stickers.Sticker;
  * Additional functionality for updating the list of stickers dynamically as new stickers are added
  * or existing stickers are used should be implemented to keep the display current.
  *
+ * On selection of this page the data will be refreshed to maintain the most up to date data from
+ * Firebase.
+ *
  * @author Tony Wilson
  * @version 1.0
  */
@@ -84,8 +87,19 @@ public class StickersFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Initiates the process to reload the user's sticker collection from the database and refreshes the fragment's
+     * UI to reflect any changes. This method makes a call to the Firebase API to fetch the most current set of stickers
+     * associated with the user. Upon successful retrieval of the updated sticker data, it clears the existing list of
+     * stickers and repopulates it with the newly fetched data. Finally, it notifies the adapter of the changes to refresh
+     * the display, ensuring the UI shows the latest information.
+     *
+     * This is essential for keeping the user's sticker collection up-to-date, particularly after new stickers have been
+     * added or existing ones have been used, and it enhances the user experience by providing immediate feedback on any
+     * changes.
+     */
     public void refreshContent() {
-        // Code to reload your stickers and update the UI
+        // Code to reload the stickers and update the UI
         FirebaseApi.loadUserStickers(new FirebaseApi.StickerDataCallback() {
             @Override
             public void onStickersLoaded(List<Sticker> updatedStickers) {

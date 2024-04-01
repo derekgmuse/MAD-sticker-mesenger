@@ -13,7 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="31">
-        <service android:name=".api.MessageListenerService" android:foregroundServiceType="dataSync"/>
         <activity
             android:name=".LogInActivity"
             android:exported="false" />

@@ -60,7 +60,7 @@ public class Chat {
 
     /**
      * Returns the userIds of all users in the conversation.
-     * @return The List of userids in the conversation as a List<String>
+     * @return The List of userIds in the conversation as a List<String>
      */
     public List<String> getUserIds() { return userIds; }
 
@@ -114,7 +114,4 @@ public class Chat {
      * @param name The new name to be set.
      */
     public void setName(String name) { this.name=name; }
-
-    // Setters if needed
-    // ...
 }
